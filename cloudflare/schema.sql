@@ -161,31 +161,43 @@ CREATE TABLE IF NOT EXISTS aviso_avance (
 CREATE INDEX IF NOT EXISTS idx_aviso_avance_alumno ON aviso_avance(estudiante_id, ocurrido_en);
 
 -- ---------------------------------------------------------------------------
--- Detalle por salto (etapa 4: "Guarida salta los techos", conteo de 2/5/10).
+-- Detalle por ronda (etapa 4 en adelante). Nace con "Guarida salta los
+-- techos" pero es generica a proposito: cada juego nuevo con preguntas
+-- diagnosticas (varios intentos cortos dentro de una partida, con
+-- distractores que representan errores tipicos) escribe aqui, no cada uno
+-- con su propia tabla.
 --
--- `intento` guarda el resumen de la partida completa (9 saltos); esta tabla
--- guarda cada salto individual, porque el panel necesita saber EN QUE SE
--- EQUIVOCA cada nino (tipo_error), no solo cuantos acerto. Un intento sin
--- saltos asociados (otro juego futuro mas simple) es valido: esta tabla es
+-- `intento` guarda el resumen de la partida completa (ej. 9 rondas); esta
+-- tabla guarda cada ronda individual, porque el panel necesita saber EN QUE
+-- SE EQUIVOCA cada nino (tipo_error), no solo cuantos acerto. Un intento sin
+-- rondas asociadas (otro juego futuro mas simple) es valido: esta tabla es
 -- opcional por juego, no todos van a necesitar este nivel de detalle.
+--
+-- `variante` y `tipo_error` son texto libre, no un CHECK cerrado: cada juego
+-- define los suyos en su propio modulo (ver cloudflare/juegos.mjs y el
+-- juego.js de cada uno) porque cada OA tiene sus propios errores tipicos
+-- (ej. 'cuenta_de_uno' en el conteo salteado, 'tabla_equivocada' en la
+-- multiplicacion). Un CHECK cerrado aqui obligaria a elegir entre una lista
+-- que no le sirve a todos los juegos o romper el INSERT del siguiente.
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS salto (
+CREATE TABLE IF NOT EXISTS ronda (
   id          TEXT PRIMARY KEY,
   intento_id  TEXT NOT NULL REFERENCES intento(id),
   numero      INTEGER NOT NULL CHECK (numero >= 1),
-  tipo_conteo TEXT NOT NULL CHECK (tipo_conteo IN ('2', '5', '10')),
-  direccion   TEXT NOT NULL CHECK (direccion IN ('adelante', 'atras')),
+  -- Que variante de la pregunta era (ej. "5-adelante" en los techos,
+  -- "10-directo" en el reparto de panes). Libre por juego.
+  variante    TEXT,
   nivel       INTEGER NOT NULL CHECK (nivel BETWEEN 1 AND 4),
   correcto    INTEGER NOT NULL CHECK (correcto IN (0, 1)),
   uso_apoyo   INTEGER NOT NULL DEFAULT 0 CHECK (uso_apoyo IN (0, 1)),
   -- Solo si correcto = 0: que distractor toco. Cada uno representa un error
-  -- tipico, no un fallo al azar (ver cloudflare/juegos/conteo-saltos.mjs).
-  tipo_error  TEXT CHECK (tipo_error IS NULL OR tipo_error IN ('cuenta_de_uno', 'salto_equivocado', 'confunde_decena')),
+  -- tipico, no un fallo al azar (ver el juego.js de cada juego).
+  tipo_error  TEXT,
   ocurrido_en TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_salto_intento ON salto(intento_id);
-CREATE INDEX IF NOT EXISTS idx_salto_error ON salto(tipo_error);
+CREATE INDEX IF NOT EXISTS idx_ronda_intento ON ronda(intento_id);
+CREATE INDEX IF NOT EXISTS idx_ronda_error ON ronda(tipo_error);
 
 -- ---------------------------------------------------------------------------
 -- Referencia a Sumo Primero por juego y nivel: SOLO tomo/capitulo/paginas (la

@@ -283,7 +283,8 @@ export function iniciarJuego(raiz, deps = {}) {
       const primeraVez = progreso.intentos === 0;
       decir('¡Muy bien!');
       estado.resultados.push({
-        numero: salto.numero, tipoConteo: salto.tipoConteo, direccion: salto.direccion, nivel: salto.nivel,
+        // variante: contrato generico de D1 (tabla ronda), ver cloudflare/schema.sql.
+        numero: salto.numero, variante: `${salto.tipoConteo}-${salto.direccion}`, nivel: salto.nivel,
         correcto: primeraVez, usoApoyo: progreso.apoyoMostrado,
         tipoError: primeraVez ? null : progreso.primerError
       });
@@ -357,7 +358,7 @@ export function iniciarJuego(raiz, deps = {}) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token, juegoId: 'guarida-salta-los-techos', duracionMs, dispositivo: 'tablet',
-          saltos: estado.resultados
+          rondas: estado.resultados
         })
       });
     } catch {

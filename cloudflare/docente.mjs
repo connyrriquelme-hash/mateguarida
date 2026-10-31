@@ -493,11 +493,11 @@ export async function obtenerAvance(env, cursoId) {
     "GROUP BY a.oa_code ORDER BY a.oa_code"
   ).bind(cursoId).all();
 
-  // Desglose de errores tipicos (solo juegos con detalle por salto, ver
+  // Desglose de errores tipicos (solo juegos con detalle por ronda, ver
   // cloudflare/intentos.mjs): cuantas veces cada tipo_error aparecio, por OA.
   const { results: erroresCrudos } = await env.DB.prepare(
     "SELECT i.oa_code, sa.tipo_error, COUNT(*) AS cantidad " +
-    "FROM salto sa JOIN intento i ON i.id = sa.intento_id JOIN estudiante e ON e.id = i.estudiante_id " +
+    "FROM ronda sa JOIN intento i ON i.id = sa.intento_id JOIN estudiante e ON e.id = i.estudiante_id " +
     "WHERE e.curso_id = ?1 AND e.activo = 1 AND sa.correcto = 0 AND sa.tipo_error IS NOT NULL " +
     "GROUP BY i.oa_code, sa.tipo_error"
   ).bind(cursoId).all();

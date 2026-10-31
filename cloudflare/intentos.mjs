@@ -7,19 +7,22 @@
  * devuelve /api/estudiantes/:id/entrar) y el OA se deduce del juego y del
  * nivel del curso (cloudflare/curriculo.mjs), igual que Lectoguarida.
  *
+ * `rondas` es generico (ver cloudflare/schema.sql: tabla `ronda`): cada
+ * juego manda `variante` y `tipoError` como texto libre con sus propios
+ * valores, no una lista cerrada compartida -- cada OA tiene sus propios
+ * errores tipicos.
+ *
  * id lo puede mandar el cliente (uuid): reenviar el mismo intento tras una
  * caida de red no duplica filas (INSERT OR IGNORE). Si el intento ya
- * existia, no se insertan los saltos de nuevo ni se recalcula el avance:
+ * existia, no se insertan las rondas de nuevo ni se recalcula el avance:
  * ya se habian procesado la primera vez.
  */
 
 import { existeJuego } from "./juegos.mjs";
 import { oaDeJuego } from "./curriculo.mjs";
 
-const TIPOS_CONTEO = ["2", "5", "10"];
-const DIRECCIONES = ["adelante", "atras"];
-const TIPOS_ERROR = ["cuenta_de_uno", "salto_equivocado", "confunde_decena"];
-const MAX_SALTOS = 30; // margen holgado sobre los 9 de una partida normal
+const MAX_RONDAS = 30; // margen holgado sobre las 9 de una partida normal
+const MAX_LARGO_TEXTO = 40; // variante / tipoError: textos cortos, no HTML
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -28,14 +31,21 @@ function json(data, status = 200) {
   });
 }
 
-function validarSalto(s, i) {
-  if (!s || typeof s !== "object") return `salto ${i}: invalido.`;
-  if (!Number.isInteger(s.numero) || s.numero < 1) return `salto ${i}: numero invalido.`;
-  if (!TIPOS_CONTEO.includes(String(s.tipoConteo))) return `salto ${i}: tipoConteo invalido.`;
-  if (!DIRECCIONES.includes(s.direccion)) return `salto ${i}: direccion invalida.`;
-  if (!Number.isInteger(s.nivel) || s.nivel < 1 || s.nivel > 4) return `salto ${i}: nivel invalido.`;
-  if (typeof s.correcto !== "boolean") return `salto ${i}: correcto invalido.`;
-  if (!s.correcto && s.tipoError && !TIPOS_ERROR.includes(s.tipoError)) return `salto ${i}: tipoError invalido.`;
+function textoCorto(valor) {
+  return typeof valor === "string" && valor.length <= MAX_LARGO_TEXTO ? valor : null;
+}
+
+function validarRonda(r, i) {
+  if (!r || typeof r !== "object") return `ronda ${i}: invalida.`;
+  if (!Number.isInteger(r.numero) || r.numero < 1) return `ronda ${i}: numero invalido.`;
+  if (!Number.isInteger(r.nivel) || r.nivel < 1 || r.nivel > 4) return `ronda ${i}: nivel invalido.`;
+  if (typeof r.correcto !== "boolean") return `ronda ${i}: correcto invalido.`;
+  if (r.variante !== undefined && r.variante !== null && textoCorto(String(r.variante)) === null) {
+    return `ronda ${i}: variante invalida.`;
+  }
+  if (!r.correcto && r.tipoError !== undefined && r.tipoError !== null && textoCorto(String(r.tipoError)) === null) {
+    return `ronda ${i}: tipoError invalido.`;
+  }
   return null;
 }
 
@@ -66,11 +76,11 @@ export async function manejarIntento(request, env) {
   const juegoId = String(body.juegoId || "");
   if (!existeJuego(juegoId)) return json({ error: "Juego no reconocido." }, 400);
 
-  const saltos = Array.isArray(body.saltos) ? body.saltos : null;
-  if (!saltos || saltos.length === 0) return json({ error: "Falta 'saltos'." }, 400);
-  if (saltos.length > MAX_SALTOS) return json({ error: "Demasiados saltos en un solo intento." }, 400);
-  for (let i = 0; i < saltos.length; i += 1) {
-    const err = validarSalto(saltos[i], i);
+  const rondas = Array.isArray(body.rondas) ? body.rondas : null;
+  if (!rondas || rondas.length === 0) return json({ error: "Falta 'rondas'." }, 400);
+  if (rondas.length > MAX_RONDAS) return json({ error: "Demasiadas rondas en un solo intento." }, 400);
+  for (let i = 0; i < rondas.length; i += 1) {
+    const err = validarRonda(rondas[i], i);
     if (err) return json({ error: err }, 400);
   }
 
@@ -84,8 +94,8 @@ export async function manejarIntento(request, env) {
 
   const intentoId = typeof body.id === "string" && body.id ? body.id : crypto.randomUUID();
   const ahoraIso = new Date().toISOString();
-  const preguntasTotal = saltos.length;
-  const preguntasCorrectas = saltos.filter((s) => s.correcto).length;
+  const preguntasTotal = rondas.length;
+  const preguntasCorrectas = rondas.filter((r) => r.correcto).length;
 
   const resultadoInsert = await env.DB.prepare(
     "INSERT OR IGNORE INTO intento " +
@@ -98,14 +108,16 @@ export async function manejarIntento(request, env) {
 
   const yaExistia = resultadoInsert.meta.changes === 0;
   if (!yaExistia) {
-    const sentenciasSaltos = saltos.map((s) => env.DB.prepare(
-      "INSERT INTO salto (id, intento_id, numero, tipo_conteo, direccion, nivel, correcto, uso_apoyo, tipo_error, ocurrido_en) " +
-      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+    const sentenciasRondas = rondas.map((r) => env.DB.prepare(
+      "INSERT INTO ronda (id, intento_id, numero, variante, nivel, correcto, uso_apoyo, tipo_error, ocurrido_en) " +
+      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"
     ).bind(
-      crypto.randomUUID(), intentoId, s.numero, String(s.tipoConteo), s.direccion, s.nivel,
-      s.correcto ? 1 : 0, s.usoApoyo ? 1 : 0, s.correcto ? null : (s.tipoError || null), ahoraIso
+      crypto.randomUUID(), intentoId, r.numero,
+      r.variante !== undefined && r.variante !== null ? String(r.variante) : null,
+      r.nivel, r.correcto ? 1 : 0, r.usoApoyo ? 1 : 0,
+      r.correcto ? null : (r.tipoError ? String(r.tipoError) : null), ahoraIso
     ));
-    await env.DB.batch(sentenciasSaltos);
+    await env.DB.batch(sentenciasRondas);
 
     if (oaCode) await recalcularAvanceOA(env, estudiante.id, oaCode);
   }

@@ -16,6 +16,14 @@ export const JUEGOS = {
     descripcion: "Cuenta de 2 en 2, de 5 en 5 y de 10 en 10 para ayudar a Guarida a cruzar la calle saltando techos.",
     duracionMinutos: "2-4",
     ruta: "/juegos/guarida-salta-los-techos/"
+  },
+  "guarida-reparte-los-panes": {
+    id: "guarida-reparte-los-panes",
+    nombre: "Guarida reparte los panes",
+    nivelPrincipal: "2-basico",
+    descripcion: "Reparte marraquetas y hallullas en bolsas iguales para practicar las tablas del 2, del 5 y del 10.",
+    duracionMinutos: "2-4",
+    ruta: "/juegos/guarida-reparte-los-panes/"
   }
 };
 
