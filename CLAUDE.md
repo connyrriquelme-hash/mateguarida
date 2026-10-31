@@ -121,23 +121,55 @@ existen, bloquean el deploy del custom domain.
    por mesa (selector numérico), asignar juegos, ver avance por
    estudiante/mesa/OA y en qué se equivocan. Cloudflare Access configurado
    y verificado (`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD_TAG` en `wrangler.jsonc`).
-4. **Primer minijuego** ✅ — **"Guarida salta los techos"**
-   (`public/juegos/guarida-salta-los-techos/`), 2º básico: conteo de 2 en 2,
-   5 en 5 y 10 en 10 (MA02-OA-01, alcance parcial: no cubre "de 100 en 100").
+4. **Minijuegos** — en curso. Cada juego registra su detalle por ronda en
+   la tabla genérica `ronda` (`id, intento_id, numero, variante, nivel,
+   correcto, uso_apoyo, tipo_error`): `variante` y `tipo_error` son texto
+   libre, cada juego define los suyos (no hay un `CHECK` cerrado
+   compartido — el primer intento de compartir uno con el segundo juego
+   falló por eso, ver `cloudflare/migrations/0004_ronda_generica.sql`).
+   Contrato de ingesta: `POST /api/intentos` con `{ token, juegoId,
+   duracionMs, dispositivo?, rondas: [...] }`.
+
+   **Orden confirmado** (uno por eje de 2º básico, más dos que profundizan
+   Números y Operaciones):
+   1. ✅ **Guarida salta los techos** — conteo de 2/5/10 (MA02-OA-01,
+      parcial: no cubre "de 100 en 100").
+   2. ✅ **Guarida reparte los panes** — multiplicación, tablas del 2, 5
+      y 10 (MA02-OA-11, completo).
+   3. **Guarida completa su álbum** — adición/sustracción 0-100 con
+      cálculo mental y valor posicional (MA02-OA-09, MA02-OA-06,
+      MA02-OA-07). Diseño aprobado, sin programar aún.
+   4. Guarida ordena el tendedero — patrones (MA02-OA-12).
+   5. Guarida llega a la hora — lectura de hora (MA02-OA-18).
+   6. Guarida ordena el taller (+ geoplano) — figuras 2D, incluye
+      "construir" (MA02-OA-15).
+   7. Guarida lanza los dados — datos y gráficos de barra (MA02-OA-21).
+
+   **Guarida salta los techos** (`public/juegos/guarida-salta-los-techos/`):
    Guarida (el gato) salta de techo en techo por una calle de colores de la
-   paleta. 9 saltos por partida (3 de cada tipo, mezclados), 4 niveles de
-   dificultad que suben/bajan solos según 2 aciertos/errores seguidos
-   (nunca tras uno), con conteo hacia adelante y hacia atrás desde el
-   nivel 3. Cada opción incorrecta es un error diagnóstico
-   (`cuenta_de_uno`, `salto_equivocado`, `confunde_decena`), guardado por
-   salto en D1 (`salto.tipo_error`) y mostrado agregado en el panel ("En
-   qué se equivocan", por OA). Apoyo con conteo concreto (🧦/✋/🪙) tras 2
-   fallos seguidos en el mismo salto. Voz con `speechSynthesis` (es-CL);
-   si el aparato no tiene voz en español aparece un aviso discreto, y
-   siempre hay un botón 🔊 para repetirla en cada salto.
-   **Sumo Primero**: campo editable desde el panel
+   paleta. 9 saltos por partida (3 de cada tipo: 2/5/10, mezclados), 4
+   niveles que suben/bajan solos según 2 aciertos/errores seguidos (nunca
+   tras uno), con conteo hacia adelante y hacia atrás desde el nivel 3.
+   Distractores diagnósticos: `cuenta_de_uno`, `salto_equivocado`,
+   `confunde_decena`.
+
+   **Guarida reparte los panes** (`public/juegos/guarida-reparte-los-panes/`):
+   Guarida reparte marraquetas y hallullas (SVG propios en
+   `pan.js`, estilo sticker, sin emojis) en bolsas iguales. 9 rondas (3
+   de cada tabla), niveles 1 (hasta 5 bolsas) y 2-3 (hasta 10 bolsas,
+   tabla completa); nivel 4 es el inverso (dado el total y cuánto trae
+   cada bolsa, cuántas bolsas hay) — la variante "bolsa misteriosa"
+   (incógnita en cuánto trae cada bolsa) quedó pendiente a propósito, sin
+   improvisar. Distractores: `suma_en_vez_de_multiplicar`,
+   `tabla_equivocada`, `conteo_parcial`.
+
+   **Apoyo** en ambos: conteo concreto tras 2 fallos seguidos en la misma
+   ronda. **Voz**: `speechSynthesis` (es-CL); si el aparato no tiene voz
+   en español aparece un aviso discreto, y siempre hay un botón 🔊 para
+   repetirla.
+   **Sumo Primero**: campo editable desde el panel por juego y nivel
    (`juego_sumo_primero`, tomo/capítulo/título/páginas), vacío hasta que
-   Conny lo complete ahí mismo — no bloquea el juego.
+   Conny lo complete ahí mismo — no bloquea ningún juego.
 5. **RAG** — subir `/corpus` a R2, guiar paso a paso la creación de la instancia
    de AutoRAG en el panel de Cloudflare y conectarla al Worker.
    **Pendiente a resolver en esta etapa:** los Programas de Estudio de
