@@ -14,4 +14,4 @@ INSERT OR IGNORE INTO estudiante (id, curso_id, nombre, inicial_apellido, mesa, 
   ('est-demo-3', 'curso-demo', 'Caro',  NULL, 2, datetime('now'), datetime('now'));
 
 INSERT OR IGNORE INTO asignacion (curso_id, juego_id, updated_at)
-VALUES ('curso-demo', 'conteo-saltos-2basico', datetime('now'));
+VALUES ('curso-demo', 'guarida-salta-los-techos', datetime('now'));

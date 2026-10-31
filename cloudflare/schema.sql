@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS aviso_avance (
 CREATE INDEX IF NOT EXISTS idx_aviso_avance_alumno ON aviso_avance(estudiante_id, ocurrido_en);
 
 -- ---------------------------------------------------------------------------
--- Detalle por salto (etapa 4: "El sapito saltarin", conteo de 2/5/10).
+-- Detalle por salto (etapa 4: "Guarida salta los techos", conteo de 2/5/10).
 --
 -- `intento` guarda el resumen de la partida completa (9 saltos); esta tabla
 -- guarda cada salto individual, porque el panel necesita saber EN QUE SE

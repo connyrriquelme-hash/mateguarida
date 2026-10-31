@@ -19,6 +19,32 @@ Dominio: **mateguarida.com** (comprado, en la cuenta de Cloudflare de Conny).
   juego con el libro que el curso ya tiene.
 - Toda actividad y juego es **original** y declara **nivel, eje y OA**.
 
+## Identidad visual: misma familia que Lectoguarida
+
+- **Mascota: Guarida**, el mismo gato de Lectoguarida (no es un personaje
+  nuevo). Vive en `public/entrada/mascota.js`, copiado tal cual desde
+  `../lectoguarida/outputs/Lectoguarida-Windows/public/entrada/mascota.js`
+  (más `public/assets/logo.png`) — nunca se edita `../lectoguarida`. Módulo
+  puro: `gatoSVG(animo)` devuelve el SVG como texto; tres ánimos: `normal`,
+  `feliz`, `ups`.
+- **Paleta**: se adoptó la misma paleta de Lectoguarida completa (naranja,
+  rosado, azul, verde, amarillo, morado, tinta, papel y sus tintes — son
+  los colores del gato y de apoyo) más **un acento propio para
+  Matemática: `--turquesa` (`#0E7C7C`)**, que no existe en Lectoguarida y
+  es lo que distingue la plataforma a simple vista. Mismo tratamiento
+  "sticker": borde de 3px en tinta, sombra dura sin blur, botones pill
+  (999px), tarjetas con radio 20px.
+- **Tipografías**: Baloo 2 (títulos) y Nunito Sans (interfaz), iguales a
+  Lectoguarida. Se agregó **Andika** (que Lectoguarida ya usa para lectura
+  inicial) para los **números grandes dentro de los juegos**
+  (`.numero-grande` en `/styles.css`): es la única de las tres pensada
+  para que un niño distinga formas parecidas (6/9), comparada visualmente
+  antes de elegirla.
+- **Convención de nombres de juego: "Guarida + verbo"** (ej. "Guarida
+  salta los techos"). El id técnico (slug, tabla `asignacion`, carpeta en
+  `public/juegos/`) también sigue esa convención en minúsculas con
+  guiones.
+
 ## Arquitectura (Cloudflare, mismo stack que Lectoguarida)
 
 - **Worker** para la app (`main` apunta al worker; `assets` sirve `public/`).
@@ -95,19 +121,20 @@ existen, bloquean el deploy del custom domain.
    por mesa (selector numérico), asignar juegos, ver avance por
    estudiante/mesa/OA y en qué se equivocan. Cloudflare Access configurado
    y verificado (`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD_TAG` en `wrangler.jsonc`).
-4. **Primer minijuego** ✅ — **"El sapito saltarín"**
-   (`public/juegos/conteo-saltos-2basico/`), 2º básico: conteo de 2 en 2, 5
-   en 5 y 10 en 10 (MA02-OA-01, alcance parcial: no cubre "de 100 en 100").
-   9 saltos por partida (3 de cada tipo, mezclados), 4 niveles de
+4. **Primer minijuego** ✅ — **"Guarida salta los techos"**
+   (`public/juegos/guarida-salta-los-techos/`), 2º básico: conteo de 2 en 2,
+   5 en 5 y 10 en 10 (MA02-OA-01, alcance parcial: no cubre "de 100 en 100").
+   Guarida (el gato) salta de techo en techo por una calle de colores de la
+   paleta. 9 saltos por partida (3 de cada tipo, mezclados), 4 niveles de
    dificultad que suben/bajan solos según 2 aciertos/errores seguidos
    (nunca tras uno), con conteo hacia adelante y hacia atrás desde el
    nivel 3. Cada opción incorrecta es un error diagnóstico
    (`cuenta_de_uno`, `salto_equivocado`, `confunde_decena`), guardado por
    salto en D1 (`salto.tipo_error`) y mostrado agregado en el panel ("En
    qué se equivocan", por OA). Apoyo con conteo concreto (🧦/✋/🪙) tras 2
-   fallos seguidos en el mismo salto. Voz con `speechSynthesis` (es-CL).
-   Mascota: **Matecito** (nombre provisional, un solo texto en el código
-   si Conny prefiere otro).
+   fallos seguidos en el mismo salto. Voz con `speechSynthesis` (es-CL);
+   si el aparato no tiene voz en español aparece un aviso discreto, y
+   siempre hay un botón 🔊 para repetirla en cada salto.
    **Sumo Primero**: campo editable desde el panel
    (`juego_sumo_primero`, tomo/capítulo/título/páginas), vacío hasta que
    Conny lo complete ahí mismo — no bloquea el juego.

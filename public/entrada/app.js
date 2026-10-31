@@ -15,6 +15,7 @@
  */
 
 import { crearApi, ErrorApi, normalizarCodigo } from './api.js';
+import { gatoSVG } from './mascota.js';
 import { h } from './dom.js';
 
 export function iniciar(raiz, deps = {}) {
@@ -23,15 +24,21 @@ export function iniciar(raiz, deps = {}) {
 
   const estado = { vista: 'cargando', datos: null, nino: null };
 
+  function gato(animo, clase) {
+    const caja = h(doc, 'div', { class: clase, 'aria-hidden': 'true' });
+    caja.innerHTML = gatoSVG(animo);
+    return caja;
+  }
+
   function pintarBarra() {
     const barra = doc.getElementById('mg-barra');
     if (!barra) return;
     barra.textContent = '';
-    barra.append(
-      h(doc, 'a', { class: 'marca', href: '/', 'aria-label': 'Mateguarida, ir al inicio' },
-        h(doc, 'span', { class: 'marca-icono', 'aria-hidden': 'true', texto: '🔢' }),
-        h(doc, 'span', { class: 'marca-texto', texto: 'Mateguarida' }))
-    );
+    const marca = h(doc, 'a', { class: 'marca', href: '/', 'aria-label': 'Mateguarida, ir al inicio' },
+      h(doc, 'span', { class: 'marca-gato' }),
+      h(doc, 'span', { class: 'marca-texto', texto: 'Mateguarida' }));
+    marca.querySelector('.marca-gato').innerHTML = gatoSVG('normal');
+    barra.append(marca);
   }
 
   function mostrar(vista, pantalla) {
@@ -46,13 +53,16 @@ export function iniciar(raiz, deps = {}) {
 
   function pantallaCargando() {
     mostrar('cargando', h(doc, 'section', { class: 'pantalla', 'aria-busy': 'true' },
-      h(doc, 'h1', { class: 'titulo', texto: 'Un momento…', tabindex: '-1', 'data-foco': '' })));
+      h(doc, 'div', { class: 'saludo' }, gato('normal', 'saludo-gato'),
+        h(doc, 'h1', { class: 'titulo', texto: 'Un momento…', tabindex: '-1', 'data-foco': '' }))));
   }
 
   function pantallaError(mensaje, reintentar) {
     mostrar('error', h(doc, 'section', { class: 'pantalla' },
-      h(doc, 'h1', { class: 'titulo', texto: 'Ups', tabindex: '-1', 'data-foco': '' }),
-      h(doc, 'p', { class: 'texto', role: 'alert', texto: mensaje }),
+      h(doc, 'div', { class: 'saludo' }, gato('ups', 'saludo-gato'),
+        h(doc, 'div', {},
+          h(doc, 'h1', { class: 'titulo', texto: 'Ups', tabindex: '-1', 'data-foco': '' }),
+          h(doc, 'p', { class: 'texto', role: 'alert', texto: mensaje }))),
       h(doc, 'button', { class: 'boton', type: 'button', texto: 'Intentar otra vez', onclick: reintentar })));
   }
 
@@ -92,8 +102,10 @@ export function iniciar(raiz, deps = {}) {
     });
 
     mostrar('codigo', h(doc, 'section', { class: 'pantalla pantalla--angosta' },
-      h(doc, 'h1', { class: 'titulo', texto: 'Código del curso', tabindex: '-1', 'data-foco': '' }),
-      h(doc, 'p', { class: 'texto', texto: 'Pídeselo a tu profesora. Se escribe una sola vez en este aparato.' }),
+      h(doc, 'div', { class: 'saludo' }, gato('normal', 'saludo-gato'),
+        h(doc, 'div', {},
+          h(doc, 'h1', { class: 'titulo', texto: 'Código del curso', tabindex: '-1', 'data-foco': '' }),
+          h(doc, 'p', { class: 'texto', texto: 'Pídeselo a tu profesora. Se escribe una sola vez en este aparato.' }))),
       formulario));
   }
 
@@ -110,9 +122,11 @@ export function iniciar(raiz, deps = {}) {
       : h(doc, 'p', { class: 'texto vacio', texto: 'Todavía no hay nombres en este curso. Pídele a tu profesora que los agregue.' });
 
     mostrar('nombres', h(doc, 'section', { class: 'pantalla' },
-      h(doc, 'p', { class: 'etiqueta-curso', texto: curso.nombre }),
-      h(doc, 'h1', { class: 'titulo', texto: '¡Hola! ¿Quién eres?', tabindex: '-1', 'data-foco': '' }),
-      h(doc, 'p', { class: 'texto', texto: 'Toca tu nombre.' }),
+      h(doc, 'div', { class: 'saludo' }, gato('normal', 'saludo-gato'),
+        h(doc, 'div', {},
+          h(doc, 'p', { class: 'etiqueta-curso', texto: curso.nombre }),
+          h(doc, 'h1', { class: 'titulo', texto: '¡Hola! ¿Quién eres?', tabindex: '-1', 'data-foco': '' }),
+          h(doc, 'p', { class: 'texto', texto: 'Toca tu nombre.' }))),
       h(doc, 'p', { class: 'error', role: 'alert', 'data-error': '' }),
       cuerpo));
   }
@@ -156,8 +170,10 @@ export function iniciar(raiz, deps = {}) {
       : h(doc, 'p', { class: 'texto', texto: 'Muy pronto vas a poder jugar aquí. Vuelve a entrar más adelante.' });
 
     mostrar('juegos', h(doc, 'section', { class: 'pantalla' },
-      h(doc, 'h1', { class: 'titulo', texto: `¡Hola, ${estado.nino.nombre}!`, tabindex: '-1', 'data-foco': '' }),
-      juegos.length ? h(doc, 'p', { class: 'texto', texto: 'Elige un juego.' }) : null,
+      h(doc, 'div', { class: 'saludo' }, gato('feliz', 'saludo-gato'),
+        h(doc, 'div', {},
+          h(doc, 'h1', { class: 'titulo', texto: `¡Hola, ${estado.nino.nombre}!`, tabindex: '-1', 'data-foco': '' }),
+          juegos.length ? h(doc, 'p', { class: 'texto', texto: 'Elige un juego.' }) : null)),
       cuerpo,
       h(doc, 'div', { class: 'acciones' },
         h(doc, 'button', { class: 'boton boton--claro', type: 'button', texto: '← No soy yo', onclick: pantallaNombres }))));

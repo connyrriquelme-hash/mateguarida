@@ -1,10 +1,12 @@
 /**
- * juego.js — "El sapito saltarín"
+ * juego.js — "Guarida salta los techos"
  * Conteo de 2 en 2, de 5 en 5 y de 10 en 10 (MA02-OA-01, ver data/juegos-oa.json).
  *
- * Una partida = 9 saltos (3 de cada tipo, en orden mezclado). Cada salto
- * muestra 4 opciones: la correcta y 3 distractores DIAGNOSTICOS (no al
- * azar), cada uno representando un error tipico:
+ * Guarida (el gato de Lectoguarida, mascota de toda Mateguarida tambien)
+ * salta de techo en techo por una calle de colores. Una partida = 9 saltos
+ * (3 de cada tipo, en orden mezclado). Cada salto muestra 4 opciones: la
+ * correcta y 3 distractores DIAGNOSTICOS (no al azar), cada uno
+ * representando un error tipico:
  *   - cuenta_de_uno:      sumar/restar 1 en vez del salto (confunde el
  *                         conteo de 1 en 1 con el salteado)
  *   - salto_equivocado:   usar otro de los tres saltos (2/5/10)
@@ -12,17 +14,22 @@
  *
  * Nivel 1-2: el punto de partida es siempre multiplo del salto, solo hacia
  * adelante. Nivel 3-4: el punto de partida puede ser cualquier numero (el
- * OA dice "empezando por cualquier numero menor que 1000") y a veces el
- * sapo cuenta hacia atras. Sube de nivel tras 2 saltos acertados a la
+ * OA dice "empezando por cualquier numero menor que 1000") y a veces
+ * Guarida cuenta hacia atras. Sube de nivel tras 2 saltos acertados a la
  * primera seguidos; baja tras 2 saltos fallados (que necesitaron mas de un
  * intento) seguidos -- nunca tras uno solo.
  *
  * Apoyo: si el nino falla 2 veces el MISMO salto, aparece el conteo
  * concreto (objetos apareciendo de a uno) antes de dejarlo intentar de
  * nuevo. Eso no lo saca del juego ni le pone un limite de tiempo.
+ *
+ * Voz: cada salto se lee con speechSynthesis (es-CL). Si el equipo no tiene
+ * ninguna voz en español, aparece un aviso discreto (el juego sigue
+ * jugable en silencio) y un boton para repetir la voz en cada salto.
  */
 
 import { h } from '../../entrada/dom.js';
+import { gatoSVG } from '../../entrada/mascota.js';
 import { CLAVE_TOKEN } from '../../entrada/api.js';
 
 const TOTAL_SALTOS = 9;
@@ -35,6 +42,9 @@ const CONTEXTO = {
   5: { icono: '✋', nombrePlural: 'manos', porGrupo: 5, escena: 'Las manos que cuentan' },
   10: { icono: '🪙', nombrePlural: 'monedas de $10', porGrupo: 10, escena: 'Las monedas de $10' }
 };
+
+/** Colores de la calle, uno por techo (misma paleta que /styles.css). */
+const COLORES_TECHO = ['naranja', 'rosado', 'verde', 'morado', 'amarillo', 'azul'];
 
 /* --------------------------- generar un salto ---------------------------- */
 
@@ -108,11 +118,30 @@ function generarSalto(numero, nivel, tipoConteo) {
 
 function generarSecuenciaDeSaltos() {
   // 3 de cada tipo, en orden mezclado, no 3-3-3 seguidos.
-  const tipos = mezclar([...PASOS, ...PASOS, ...PASOS]);
-  return tipos; // el nivel de cada salto se decide al momento de jugarlo (depende del progreso)
+  return mezclar([...PASOS, ...PASOS, ...PASOS]);
 }
 
 /* -------------------------------- audio ---------------------------------- */
+
+/** true si el navegador tiene al menos una voz en español cargada. */
+function hayVozEspanol() {
+  try {
+    if (!('speechSynthesis' in window)) return false;
+    const voces = window.speechSynthesis.getVoices();
+    return voces.some((v) => v.lang && v.lang.toLowerCase().startsWith('es'));
+  } catch {
+    return false;
+  }
+}
+
+// Muchos navegadores cargan la lista de voces de forma asincrona: la
+// primera llamada a getVoices() puede venir vacia aunque si haya voz en
+// español. Se pide una vez al cargar el modulo para "despertarla"; de ahi
+// en adelante hayVozEspanol() ya ve la lista real.
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener?.('voiceschanged', () => window.speechSynthesis.getVoices());
+}
 
 function decir(texto) {
   try {
@@ -139,8 +168,15 @@ export function iniciarJuego(raiz, deps = {}) {
     indice: 0,
     tiposPendientes: generarSecuenciaDeSaltos(),
     resultados: [],
-    inicioMs: Date.now()
+    inicioMs: Date.now(),
+    ultimoSalto: null
   };
+
+  function gato(animo, clase) {
+    const caja = h(doc, 'div', { class: clase, 'aria-hidden': 'true' });
+    caja.innerHTML = gatoSVG(animo);
+    return caja;
+  }
 
   function mostrar(pantalla) {
     raiz.textContent = '';
@@ -155,9 +191,20 @@ export function iniciarJuego(raiz, deps = {}) {
 
   function pantallaSinSesion() {
     mostrar(h(doc, 'section', { class: 'pantalla' },
+      gato('normal', 'saludo-gato'),
       h(doc, 'h1', { class: 'titulo', texto: 'Primero entra a tu curso', tabindex: '-1', 'data-foco': '' }),
       h(doc, 'p', { class: 'texto', texto: 'Pídele a tu profesora que te ayude a entrar desde la pantalla principal.' }),
       h(doc, 'a', { class: 'boton', href: '/entrada/', texto: 'Ir a la entrada' })));
+  }
+
+  /** Aviso discreto + boton de repetir, solo si el aparato no tiene voz en español. */
+  function barraDeVoz(repetir) {
+    if (hayVozEspanol()) {
+      return h(doc, 'button', { class: 'boton-voz', type: 'button', 'aria-label': 'Repetir la voz', onclick: repetir }, '🔊');
+    }
+    return h(doc, 'div', { class: 'aviso-sin-voz' },
+      h(doc, 'span', { texto: 'Este aparato no tiene voz en español. El juego funciona igual.' }),
+      h(doc, 'button', { class: 'boton-voz', type: 'button', 'aria-label': 'Repetir la voz', onclick: repetir }, '🔊'));
   }
 
   function jugarSalto() {
@@ -166,7 +213,14 @@ export function iniciarJuego(raiz, deps = {}) {
     // si el punto de partida es redondo y si hay saltos hacia atras.
     const tipoConteo = estado.tiposPendientes[estado.indice];
     const salto = generarSalto(estado.indice + 1, estado.nivel, tipoConteo);
+    estado.ultimoSalto = salto;
     pintarSalto(salto, { intentos: 0, primerError: null, apoyoMostrado: false });
+  }
+
+  function textoPregunta(salto) {
+    return salto.direccion === 'adelante'
+      ? `¿A qué número llega Guarida desde ${salto.anterior}?`
+      : `Guarida salta hacia atrás desde ${salto.anterior}. ¿A qué número llega?`;
   }
 
   function pintarSalto(salto, progreso) {
@@ -174,26 +228,30 @@ export function iniciarJuego(raiz, deps = {}) {
 
     const avisoAviso = h(doc, 'p', { class: 'error', role: 'alert', 'data-aviso': '' });
 
-    const sendero = h(doc, 'div', { class: 'sendero' },
-      h(doc, 'div', { class: 'piedra piedra--anterior', texto: String(salto.anterior) }),
-      h(doc, 'div', { class: 'piedra piedra--blanco', 'data-foco': '', tabindex: '-1', texto: '?' }));
+    const calle = h(doc, 'div', { class: 'calle' },
+      h(doc, 'div', { class: `techo techo--anterior techo--${COLORES_TECHO[salto.numero % COLORES_TECHO.length]}` },
+        h(doc, 'span', { class: 'numero-grande', texto: String(salto.anterior) })),
+      gato('normal', 'gato-saltando'),
+      h(doc, 'div', { class: `techo techo--blanco techo--${COLORES_TECHO[(salto.numero + 1) % COLORES_TECHO.length]}`, 'data-foco': '', tabindex: '-1' },
+        h(doc, 'span', { class: 'numero-grande', texto: '?' })));
 
     const botonesOpciones = salto.opciones.map((op) =>
       h(doc, 'button', {
-        class: 'boton-salto', type: 'button', texto: String(op.valor),
+        class: 'boton-salto numero-grande', type: 'button', texto: String(op.valor),
         onclick: () => elegirOpcion(salto, progreso, op)
       })
     );
 
     mostrar(h(doc, 'section', { class: 'pantalla-juego' },
       h(doc, 'p', { class: 'escena-etiqueta', texto: `${ctx.escena} · de ${salto.tipoConteo} en ${salto.tipoConteo}` }),
-      sendero,
-      h(doc, 'p', { class: 'texto', texto: salto.direccion === 'adelante' ? 'Matecito salta hacia adelante. ¿A qué piedra llega?' : 'Matecito salta hacia atrás. ¿A qué piedra llega?' }),
+      calle,
+      h(doc, 'p', { class: 'texto', texto: textoPregunta(salto) }),
+      barraDeVoz(() => decir(textoPregunta(salto))),
       avisoAviso,
       h(doc, 'div', { class: 'opciones' }, botonesOpciones),
       h(doc, 'p', { class: 'progreso', texto: `Salto ${salto.numero} de ${TOTAL_SALTOS}` })));
 
-    decir(`¿A qué número llega Matecito desde ${salto.anterior}?`);
+    decir(textoPregunta(salto));
   }
 
   function mostrarApoyo(salto, progreso, despues) {
@@ -204,14 +262,18 @@ export function iniciarJuego(raiz, deps = {}) {
       filas.push(h(doc, 'div', { class: 'grupo-apoyo' }, ctx.icono.repeat(ctx.porGrupo)));
     }
 
+    const texto = `${salto.anterior} ${salto.direccion === 'adelante' ? 'más' : 'menos'} ${salto.tipoConteo} es ${salto.correcto}`;
+
     mostrar(h(doc, 'section', { class: 'pantalla-juego' },
+      gato('normal', 'saludo-gato'),
       h(doc, 'h1', { class: 'titulo', texto: 'Contemos juntos', tabindex: '-1', 'data-foco': '' }),
       h(doc, 'p', { class: 'texto', texto: `Desde ${salto.anterior}, cada grupo de ${ctx.nombrePlural} suma ${salto.tipoConteo}.` }),
       h(doc, 'div', { class: 'grupos-apoyo' }, filas),
-      h(doc, 'p', { class: 'texto texto--grande', texto: `${salto.anterior} ${salto.direccion === 'adelante' ? '+' : '−'} ${salto.tipoConteo} = ${salto.correcto}` }),
+      h(doc, 'p', { class: 'texto texto--grande numero-grande', texto: `${salto.anterior} ${salto.direccion === 'adelante' ? '+' : '−'} ${salto.tipoConteo} = ${salto.correcto}` }),
+      barraDeVoz(() => decir(texto)),
       h(doc, 'button', { class: 'boton', type: 'button', texto: 'Intentar de nuevo', onclick: despues })));
 
-    decir(`${salto.anterior} y ${salto.correcto}`);
+    decir(texto);
     progreso.apoyoMostrado = true;
   }
 
@@ -235,7 +297,9 @@ export function iniciarJuego(raiz, deps = {}) {
     if (!progreso.primerError) progreso.primerError = opcion.tipoError;
     decir('Intenta otra vez');
     const aviso = raiz.querySelector('[data-aviso]');
-    if (aviso) aviso.textContent = 'Casi. Mira desde qué piedra parte Matecito.';
+    if (aviso) aviso.textContent = 'Casi. Mira desde qué techo salta Guarida.';
+    const gatoCaja = raiz.querySelector('.gato-saltando');
+    if (gatoCaja) gatoCaja.innerHTML = gatoSVG('ups');
 
     if (progreso.intentos >= 2 && !progreso.apoyoMostrado) {
       mostrarApoyo(salto, progreso, () => pintarSalto(salto, progreso));
@@ -272,14 +336,17 @@ export function iniciarJuego(raiz, deps = {}) {
   async function terminarPartida() {
     const correctos = estado.resultados.filter((r) => r.correcto).length;
     const duracionMs = Date.now() - estado.inicioMs;
+    const texto = `Guarida dio ${TOTAL_SALTOS} saltos contigo. Acertaste ${correctos} de ${TOTAL_SALTOS} a la primera.`;
 
     mostrar(h(doc, 'section', { class: 'pantalla-juego pantalla-juego--cierre' },
-      h(doc, 'h1', { class: 'titulo', texto: '¡Llegamos a la meta!', tabindex: '-1', 'data-foco': '' }),
-      h(doc, 'p', { class: 'texto texto--grande', texto: `🐸 Matecito dio ${TOTAL_SALTOS} saltos contigo.` }),
+      gato('feliz', 'saludo-gato'),
+      h(doc, 'h1', { class: 'titulo', texto: '¡Llegamos al final de la calle!', tabindex: '-1', 'data-foco': '' }),
+      h(doc, 'p', { class: 'texto texto--grande', texto: `Guarida dio ${TOTAL_SALTOS} saltos contigo.` }),
       h(doc, 'p', { class: 'texto', texto: `Acertaste ${correctos} de ${TOTAL_SALTOS} a la primera.` }),
+      barraDeVoz(() => decir(texto)),
       h(doc, 'a', { class: 'boton', href: '/entrada/', texto: 'Volver' })));
 
-    decir('¡Llegamos a la meta!');
+    decir('¡Llegamos al final de la calle!');
 
     const token = obtenerToken();
     if (!token) return; // no deberia pasar (ya se valido al entrar), pero no se rompe el cierre si pasa.
@@ -289,7 +356,7 @@ export function iniciarJuego(raiz, deps = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token, juegoId: 'conteo-saltos-2basico', duracionMs, dispositivo: 'tablet',
+          token, juegoId: 'guarida-salta-los-techos', duracionMs, dispositivo: 'tablet',
           saltos: estado.resultados
         })
       });

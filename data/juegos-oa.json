@@ -4,7 +4,7 @@
   "catalogo": "oa.json",
   "description": "Que OA trabaja cada juego de Mateguarida en cada nivel. Solo codigos de oa.json; lo verifica tests/ (cuando existan). \"alcance\": \"parcial\" = el OA incluye lo que el juego hace pero pide mas de lo que el juego mide; \"porQue\" explica que falta.",
   "juegos": {
-    "conteo-saltos-2basico": {
+    "guarida-salta-los-techos": {
       "2-basico": {
         "oa": ["MA02-OA-01"],
         "alcance": "parcial",
