@@ -65,7 +65,10 @@ export function crearApi({ fetchFn, almacen } = {}) {
     guardarCodigo: (c) => guardado.set(CLAVE_CODIGO, c),
     olvidarCodigo: () => guardado.quitar(CLAVE_CODIGO),
 
-    /** Valida un codigo (recien escrito, o el guardado) y trae curso + nombres. */
+    /** El token de sesion del estudiante, para que el juego lo use al enviar su resultado. */
+    guardarToken: (t) => guardado.set(CLAVE_TOKEN, t),
+
+    /** Valida un codigo (recien escrito, o el guardado) y trae curso + nombres + juegos asignados. */
     cargarEntrada: (codigo) => llamar('/api/entrada', { metodo: 'POST', cuerpo: { codigo } }),
 
     /** El estudiante entra solo eligiendo su nombre. Sin PIN. */

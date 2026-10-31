@@ -90,20 +90,27 @@ existen, bloquean el deploy del custom domain.
    estudiantes, juegos, asignaciones, intentos, avance por OA) y la pantalla de
    entrada adaptada de Lectoguarida. Desplegar una portada «Próximamente» en
    mateguarida.com para probar el dominio.
-3. **Panel docente** ✅ — crear curso, ingresar estudiantes (uno por uno o
-   pegando la lista), agrupar por mesa, ver avance por estudiante/mesa/OA.
-   "Asignar juegos por nivel" queda listo del lado de la base (`asignacion`)
-   pero sin UI real todavía: no hay ningún juego que asignar hasta la etapa 4.
-   **Pendiente que haga Conny, no automatizable desde aquí:** configurar
-   Cloudflare Access sobre `mateguarida.com/panel*` y
-   `mateguarida.com/api/docente*` (correo connyrriquelme@gmail.com) en
-   Zero Trust → Access → Applications. Sin esto, la segunda capa de
-   `cloudflare/acceso.mjs` ya bloquea `/panel` y `/api/docente/*` (devuelve
-   401 a cualquiera), pero Access es la protección real pensada para esto,
-   con su propia pantalla de login por correo.
-4. **Primer minijuego** — 2º Básico, conteo de 2 en 2, 5 en 5 y 10 en 10. De 2 a
-   4 minutos, visual, con audio y botones grandes. Registra avance en D1.
-   Sirve en tablet y pizarra digital.
+3. **Panel docente** ✅ — crear curso (código generado solo, cantidad de
+   mesas), ingresar estudiantes (uno por uno o pegando la lista), agrupar
+   por mesa (selector numérico), asignar juegos, ver avance por
+   estudiante/mesa/OA y en qué se equivocan. Cloudflare Access configurado
+   y verificado (`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD_TAG` en `wrangler.jsonc`).
+4. **Primer minijuego** ✅ — **"El sapito saltarín"**
+   (`public/juegos/conteo-saltos-2basico/`), 2º básico: conteo de 2 en 2, 5
+   en 5 y 10 en 10 (MA02-OA-01, alcance parcial: no cubre "de 100 en 100").
+   9 saltos por partida (3 de cada tipo, mezclados), 4 niveles de
+   dificultad que suben/bajan solos según 2 aciertos/errores seguidos
+   (nunca tras uno), con conteo hacia adelante y hacia atrás desde el
+   nivel 3. Cada opción incorrecta es un error diagnóstico
+   (`cuenta_de_uno`, `salto_equivocado`, `confunde_decena`), guardado por
+   salto en D1 (`salto.tipo_error`) y mostrado agregado en el panel ("En
+   qué se equivocan", por OA). Apoyo con conteo concreto (🧦/✋/🪙) tras 2
+   fallos seguidos en el mismo salto. Voz con `speechSynthesis` (es-CL).
+   Mascota: **Matecito** (nombre provisional, un solo texto en el código
+   si Conny prefiere otro).
+   **Sumo Primero**: campo editable desde el panel
+   (`juego_sumo_primero`, tomo/capítulo/título/páginas), vacío hasta que
+   Conny lo complete ahí mismo — no bloquea el juego.
 5. **RAG** — subir `/corpus` a R2, guiar paso a paso la creación de la instancia
    de AutoRAG en el panel de Cloudflare y conectarla al Worker.
    **Pendiente a resolver en esta etapa:** los Programas de Estudio de

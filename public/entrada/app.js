@@ -8,7 +8,7 @@
  *   2. rejilla con los nombres del curso -> toca su nombre -> entra
  *      (sin PIN: se quito en la etapa 3, un nino peleando con un PIN antes
  *      de jugar era friccion que no aportaba nada)
- *   3. por ahora: "Muy pronto" (todavia no existen juegos; eso es la etapa 4)
+ *   3. lista de juegos asignados al curso (vacia = "Muy pronto")
  *
  * Todo el texto llega al DOM con textContent, nunca con innerHTML: los
  * nombres de los niños son datos de menores y no se interpretan como HTML.
@@ -119,8 +119,9 @@ export function iniciar(raiz, deps = {}) {
 
   async function entrarComo(estudiante) {
     const sesion = await api.entrar(estudiante.id);
+    api.guardarToken(sesion.token);
     estado.nino = { id: sesion.estudiante.id, nombre: sesion.estudiante.nombre };
-    pantallaProximamente();
+    pantallaJuegos();
   }
 
   async function elegirNino(estudiante) {
@@ -143,10 +144,21 @@ export function iniciar(raiz, deps = {}) {
     }
   }
 
-  function pantallaProximamente() {
-    mostrar('proximamente', h(doc, 'section', { class: 'pantalla' },
+  function pantallaJuegos() {
+    const juegos = estado.datos.juegos || [];
+
+    const cuerpo = juegos.length
+      ? h(doc, 'ul', { class: 'nombres' }, juegos.map((j, i) =>
+        h(doc, 'li', {},
+          h(doc, 'a', { class: 'nombre', href: j.ruta, 'data-color': i % 6 },
+            h(doc, 'span', { class: 'nombre-inicial', 'aria-hidden': 'true', texto: '▶' }),
+            h(doc, 'span', { class: 'nombre-texto', texto: j.nombre })))))
+      : h(doc, 'p', { class: 'texto', texto: 'Muy pronto vas a poder jugar aquí. Vuelve a entrar más adelante.' });
+
+    mostrar('juegos', h(doc, 'section', { class: 'pantalla' },
       h(doc, 'h1', { class: 'titulo', texto: `¡Hola, ${estado.nino.nombre}!`, tabindex: '-1', 'data-foco': '' }),
-      h(doc, 'p', { class: 'texto', texto: 'Muy pronto vas a poder jugar aquí. Vuelve a entrar más adelante.' }),
+      juegos.length ? h(doc, 'p', { class: 'texto', texto: 'Elige un juego.' }) : null,
+      cuerpo,
       h(doc, 'div', { class: 'acciones' },
         h(doc, 'button', { class: 'boton boton--claro', type: 'button', texto: '← No soy yo', onclick: pantallaNombres }))));
   }

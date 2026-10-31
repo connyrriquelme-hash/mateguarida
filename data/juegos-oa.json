@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-10-31",
+  "catalogo": "oa.json",
+  "description": "Que OA trabaja cada juego de Mateguarida en cada nivel. Solo codigos de oa.json; lo verifica tests/ (cuando existan). \"alcance\": \"parcial\" = el OA incluye lo que el juego hace pero pide mas de lo que el juego mide; \"porQue\" explica que falta.",
+  "juegos": {
+    "conteo-saltos-2basico": {
+      "2-basico": {
+        "oa": ["MA02-OA-01"],
+        "alcance": "parcial",
+        "porQue": "Trabaja el conteo de 2 en 2, de 5 en 5 y de 10 en 10, hacia adelante y hacia atras (niveles 3 y 4), empezando desde cualquier numero menor que 100 (nivel experto: hasta 1000 para el salto de 10). No incluye el conteo de 100 en 100, que tambien pide este OA."
+      }
+    }
+  }
+}

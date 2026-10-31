@@ -11,10 +11,12 @@
  */
 
 import { manejarEntrada, manejarEntrarEstudiante } from "./curso.mjs";
+import { manejarIntento } from "./intentos.mjs";
 import { obtenerDocente, respuestaNoAutorizado } from "./acceso.mjs";
 import {
   listarCursos, crearCurso, obtenerCurso, actualizarCurso, eliminarCurso, regenerarCodigo,
-  agregarEstudiantes, actualizarEstudiante, eliminarEstudiante, obtenerAvance
+  agregarEstudiantes, actualizarEstudiante, eliminarEstudiante, obtenerAvance,
+  listarJuegosDeCurso, asignarJuegos, obtenerSumoPrimero, guardarSumoPrimero
 } from "./docente.mjs";
 
 function json(data, status = 200) {
@@ -57,11 +59,28 @@ async function manejarDocente(request, env, pathname) {
     return obtenerAvance(env, decodeURIComponent(matchAvance[1]));
   }
 
+  const matchJuegosCurso = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/juegos$/);
+  if (matchJuegosCurso) {
+    const id = decodeURIComponent(matchJuegosCurso[1]);
+    if (method === "GET") return listarJuegosDeCurso(env, id);
+    if (method === "PUT") return asignarJuegos(request, env, id);
+  }
+
   const matchEstudiante = pathname.match(/^\/api\/docente\/estudiantes\/([^/]+)$/);
   if (matchEstudiante) {
     const id = decodeURIComponent(matchEstudiante[1]);
     if (method === "PATCH") return actualizarEstudiante(request, env, id);
     if (method === "DELETE") return eliminarEstudiante(env, id);
+  }
+
+  const matchSumoPrimero = pathname.match(/^\/api\/docente\/juegos\/([^/]+)\/sumo-primero$/);
+  if (matchSumoPrimero) {
+    const juegoId = decodeURIComponent(matchSumoPrimero[1]);
+    if (method === "GET") {
+      const nivel = new URL(request.url).searchParams.get("nivel") || "";
+      return obtenerSumoPrimero(env, juegoId, nivel);
+    }
+    if (method === "PUT") return guardarSumoPrimero(request, env, juegoId);
   }
 
   return json({ error: "No encontrado." }, 404);
@@ -83,6 +102,10 @@ export default {
     const matchEntrar = pathname.match(/^\/api\/estudiantes\/([^/]+)\/entrar$/);
     if (matchEntrar && request.method === "POST") {
       return manejarEntrarEstudiante(request, env, decodeURIComponent(matchEntrar[1]));
+    }
+
+    if (pathname === "/api/intentos" && request.method === "POST") {
+      return manejarIntento(request, env);
     }
 
     if (pathname.startsWith("/api/docente/")) {

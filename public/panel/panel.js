@@ -129,8 +129,11 @@ export function iniciar(raiz) {
     estado.cursoId = cursoId;
     mostrar(h(doc, 'section', { class: 'panel-pantalla', 'aria-busy': 'true' }, h(doc, 'p', { texto: 'Cargando…' })));
     try {
-      const { curso, estudiantes } = await api.obtenerCurso(cursoId);
-      pintarCurso(curso, estudiantes);
+      const [{ curso, estudiantes }, { juegos }] = await Promise.all([
+        api.obtenerCurso(cursoId),
+        api.listarJuegosDeCurso(cursoId)
+      ]);
+      pintarCurso(curso, estudiantes, juegos);
     } catch (error) {
       mostrar(h(doc, 'section', { class: 'panel-pantalla' },
         h(doc, 'p', { class: 'panel-error', role: 'alert', texto: mensajeError(error) }),
@@ -153,7 +156,103 @@ export function iniciar(raiz) {
     return select;
   }
 
-  function pintarCurso(curso, estudiantes) {
+  function seccionJuegos(curso, juegos) {
+    if (!juegos.length) {
+      return h(doc, 'section', {},
+        h(doc, 'h2', { texto: 'Juegos' }),
+        h(doc, 'p', { class: 'panel-vacio', texto: 'Todavía no hay juegos para asignar.' }));
+    }
+
+    const casillas = juegos.map((j) => {
+      const casilla = h(doc, 'input', { type: 'checkbox', checked: j.asignado || undefined, id: `juego-${j.id}` });
+      return h(doc, 'div', { class: 'panel-juego' },
+        h(doc, 'label', { for: `juego-${j.id}` }, casilla, ` ${j.nombre}`),
+        h(doc, 'p', { class: 'panel-ayuda', texto: `${j.descripcion} (${j.duracionMinutos} min)` }),
+        formularioSumoPrimero(j.id, curso.nivel, j.asignado));
+    });
+
+    const boton = h(doc, 'button', { class: 'panel-boton', type: 'button', texto: 'Guardar juegos asignados' });
+    boton.addEventListener('click', async () => {
+      const seleccionados = juegos
+        .map((j) => doc.getElementById(`juego-${j.id}`))
+        .filter((c) => c && c.checked)
+        .map((c) => c.id.replace('juego-', ''));
+      boton.disabled = true;
+      try {
+        await api.asignarJuegos(curso.id, seleccionados);
+        pantallaCurso(curso.id);
+      } catch (error) {
+        boton.disabled = false;
+        doc.defaultView.alert(mensajeError(error));
+      }
+    });
+
+    return h(doc, 'section', {},
+      h(doc, 'h2', { texto: 'Juegos' }),
+      h(doc, 'p', { class: 'panel-ayuda', texto: 'Marca los juegos que este curso puede ver al entrar.' }),
+      casillas, boton);
+  }
+
+  /** Formulario pequeño para la referencia de Sumo Primero (editable, opcional). */
+  function formularioSumoPrimero(juegoId, nivel, visibleAlInicio) {
+    const detalle = h(doc, 'details', { open: visibleAlInicio || undefined, class: 'panel-sumo' },
+      h(doc, 'summary', { texto: 'Referencia a Sumo Primero (opcional)' }));
+
+    const cargando = h(doc, 'p', { texto: 'Cargando…' });
+    detalle.append(cargando);
+
+    detalle.addEventListener('toggle', async function alAbrir() {
+      if (!detalle.open) return;
+      detalle.removeEventListener('toggle', alAbrir);
+      try {
+        const { sumoPrimero } = await api.obtenerSumoPrimero(juegoId, nivel);
+        cargando.remove();
+        pintarFormularioSumoPrimero(detalle, juegoId, nivel, sumoPrimero);
+      } catch (error) {
+        cargando.textContent = mensajeError(error);
+      }
+    });
+
+    if (visibleAlInicio) detalle.dispatchEvent(new Event('toggle'));
+    return detalle;
+  }
+
+  function pintarFormularioSumoPrimero(detalle, juegoId, nivel, actual) {
+    const tomo = h(doc, 'input', { type: 'text', value: actual.tomo || '', placeholder: 'Tomo', maxlength: '20' });
+    const capitulo = h(doc, 'input', { type: 'text', value: actual.capitulo || '', placeholder: 'Capítulo', maxlength: '20' });
+    const titulo = h(doc, 'input', { type: 'text', value: actual.titulo || '', placeholder: 'Título del capítulo', maxlength: '120' });
+    const paginas = h(doc, 'input', { type: 'text', value: actual.paginas || '', placeholder: 'Páginas', maxlength: '20' });
+    const aviso = h(doc, 'p', { class: 'panel-error', role: 'alert' });
+    const boton = h(doc, 'button', { class: 'panel-boton panel-boton--chico', type: 'button', texto: 'Guardar referencia' });
+
+    boton.addEventListener('click', async () => {
+      aviso.textContent = '';
+      boton.disabled = true;
+      try {
+        await api.guardarSumoPrimero(juegoId, {
+          nivel, tomo: tomo.value.trim(), capitulo: capitulo.value.trim(),
+          titulo: titulo.value.trim(), paginas: paginas.value.trim()
+        });
+        boton.disabled = false;
+        boton.textContent = 'Guardado ✓';
+        setTimeout(() => { boton.textContent = 'Guardar referencia'; }, 1500);
+      } catch (error) {
+        boton.disabled = false;
+        aviso.textContent = mensajeError(error);
+      }
+    });
+
+    detalle.append(
+      h(doc, 'div', { class: 'panel-formulario panel-formulario--compacto' },
+        h(doc, 'label', { texto: 'Tomo' }), tomo,
+        h(doc, 'label', { texto: 'Capítulo' }), capitulo,
+        h(doc, 'label', { texto: 'Título del capítulo' }), titulo,
+        h(doc, 'label', { texto: 'Páginas' }), paginas,
+        aviso, boton)
+    );
+  }
+
+  function pintarCurso(curso, estudiantes, juegos) {
     const filasEstudiantes = estudiantes.length
       ? estudiantes.map((e) => filaEstudiante(curso, e))
       : [h(doc, 'tr', {}, h(doc, 'td', { colspan: '5', class: 'panel-vacio', texto: 'Todavía no hay estudiantes. Pégalos abajo.' }))];
@@ -185,7 +284,9 @@ export function iniciar(raiz) {
           h(doc, 'th', { texto: 'Mesa' }), h(doc, 'th', { texto: 'Activo' }), h(doc, 'th', {}))),
         h(doc, 'tbody', {}, filasEstudiantes)),
 
-      formularioPegarLista(curso)));
+      formularioPegarLista(curso),
+
+      seccionJuegos(curso, juegos)));
   }
 
   function filaEstudiante(curso, e) {
@@ -296,7 +397,29 @@ export function iniciar(raiz) {
       h(doc, 'h2', { texto: 'Por OA' }),
       tablaAvance(porOA.map((f) => ({
         oa: f.oaCode, estudiantes: f.totalEstudiantes, intentos: f.intentosTotal, precision: `${Math.round(f.precision * 100)}%`
-      })), [['oa', 'OA'], ['estudiantes', 'Estudiantes'], ['intentos', 'Intentos'], ['precision', 'Precisión']])));
+      })), [['oa', 'OA'], ['estudiantes', 'Estudiantes'], ['intentos', 'Intentos'], ['precision', 'Precisión']]),
+      seccionErroresPorOA(porOA)));
+  }
+
+  const ETIQUETA_ERROR = {
+    cuenta_de_uno: 'Cuenta de 1 en 1 en vez del salto',
+    salto_equivocado: 'Confunde el tipo de salto (2/5/10)',
+    confunde_decena: 'Se equivoca en la decena'
+  };
+
+  /** Que errores tipicos se repiten mas, por OA (solo juegos con ese detalle). */
+  function seccionErroresPorOA(porOA) {
+    const conErrores = porOA.filter((f) => Object.keys(f.erroresPorTipo || {}).length > 0);
+    if (!conErrores.length) return null;
+
+    return h(doc, 'div', {},
+      h(doc, 'h2', { texto: 'En qué se equivocan' }),
+      conErrores.map((f) => h(doc, 'p', { class: 'panel-errores' },
+        `${f.oaCode}: `,
+        Object.entries(f.erroresPorTipo)
+          .sort((a, b) => b[1] - a[1])
+          .map(([tipo, cantidad]) => `${ETIQUETA_ERROR[tipo] || tipo} (${cantidad})`)
+          .join(' · '))));
   }
 
   pantallaCursos();

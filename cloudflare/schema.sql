@@ -159,3 +159,47 @@ CREATE TABLE IF NOT EXISTS aviso_avance (
 );
 
 CREATE INDEX IF NOT EXISTS idx_aviso_avance_alumno ON aviso_avance(estudiante_id, ocurrido_en);
+
+-- ---------------------------------------------------------------------------
+-- Detalle por salto (etapa 4: "El sapito saltarin", conteo de 2/5/10).
+--
+-- `intento` guarda el resumen de la partida completa (9 saltos); esta tabla
+-- guarda cada salto individual, porque el panel necesita saber EN QUE SE
+-- EQUIVOCA cada nino (tipo_error), no solo cuantos acerto. Un intento sin
+-- saltos asociados (otro juego futuro mas simple) es valido: esta tabla es
+-- opcional por juego, no todos van a necesitar este nivel de detalle.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS salto (
+  id          TEXT PRIMARY KEY,
+  intento_id  TEXT NOT NULL REFERENCES intento(id),
+  numero      INTEGER NOT NULL CHECK (numero >= 1),
+  tipo_conteo TEXT NOT NULL CHECK (tipo_conteo IN ('2', '5', '10')),
+  direccion   TEXT NOT NULL CHECK (direccion IN ('adelante', 'atras')),
+  nivel       INTEGER NOT NULL CHECK (nivel BETWEEN 1 AND 4),
+  correcto    INTEGER NOT NULL CHECK (correcto IN (0, 1)),
+  uso_apoyo   INTEGER NOT NULL DEFAULT 0 CHECK (uso_apoyo IN (0, 1)),
+  -- Solo si correcto = 0: que distractor toco. Cada uno representa un error
+  -- tipico, no un fallo al azar (ver cloudflare/juegos/conteo-saltos.mjs).
+  tipo_error  TEXT CHECK (tipo_error IS NULL OR tipo_error IN ('cuenta_de_uno', 'salto_equivocado', 'confunde_decena')),
+  ocurrido_en TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_salto_intento ON salto(intento_id);
+CREATE INDEX IF NOT EXISTS idx_salto_error ON salto(tipo_error);
+
+-- ---------------------------------------------------------------------------
+-- Referencia a Sumo Primero por juego y nivel: SOLO tomo/capitulo/paginas (la
+-- ficha bibliografica), nunca el contenido del libro -- regla de CLAUDE.md.
+-- La profesora la escribe/edita desde el panel; el juego_id es el id estatico
+-- del juego (definido en el codigo, igual que `asignacion.juego_id`).
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS juego_sumo_primero (
+  juego_id   TEXT NOT NULL,
+  nivel      TEXT NOT NULL CHECK (nivel IN ('NT1', 'NT2', '1-basico', '2-basico', '3-basico', '4-basico')),
+  tomo       TEXT,
+  capitulo   TEXT,
+  titulo     TEXT,
+  paginas    TEXT,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (juego_id, nivel)
+);

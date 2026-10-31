@@ -10,6 +10,7 @@
  */
 
 import { generarCodigo, validarCodigo } from "./codigos.mjs";
+import { JUEGOS, existeJuego } from "./juegos.mjs";
 
 const NIVELES_VALIDOS = ["NT1", "NT2", "1-basico", "2-basico", "3-basico", "4-basico"];
 const CANTIDAD_MESAS_MIN = 1;
@@ -369,6 +370,85 @@ export async function eliminarEstudiante(env, estudianteId) {
   return json({ ok: true });
 }
 
+/* --------------------------- juegos y asignacion -------------------------- */
+
+/** GET /api/docente/cursos/:id/juegos -> todos los juegos + cuales estan asignados a este curso. */
+export async function listarJuegosDeCurso(env, cursoId) {
+  const curso = await env.DB.prepare("SELECT id FROM curso WHERE id = ?1").bind(cursoId).first();
+  if (!curso) return json({ error: "Curso no encontrado." }, 404);
+
+  const { results: asignados } = await env.DB.prepare(
+    "SELECT juego_id FROM asignacion WHERE curso_id = ?1"
+  ).bind(cursoId).all();
+  const idsAsignados = new Set((asignados || []).map((a) => a.juego_id));
+
+  return json({
+    juegos: Object.values(JUEGOS).map((j) => ({
+      id: j.id, nombre: j.nombre, nivelPrincipal: j.nivelPrincipal,
+      descripcion: j.descripcion, duracionMinutos: j.duracionMinutos,
+      asignado: idsAsignados.has(j.id)
+    }))
+  });
+}
+
+/** PUT /api/docente/cursos/:id/juegos  { juegoIds: [...] } -- remplaza la asignacion completa. */
+export async function asignarJuegos(request, env, cursoId) {
+  const curso = await env.DB.prepare("SELECT id FROM curso WHERE id = ?1").bind(cursoId).first();
+  if (!curso) return json({ error: "Curso no encontrado." }, 404);
+
+  const body = await leerJson(request);
+  const juegoIds = Array.isArray(body.juegoIds) ? body.juegoIds : null;
+  if (!juegoIds) return json({ error: "Falta 'juegoIds' (puede ser [])." }, 400);
+  for (const id of juegoIds) {
+    if (!existeJuego(id)) return json({ error: `Juego desconocido: ${id}` }, 400);
+  }
+
+  const t = ahora();
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM asignacion WHERE curso_id = ?1").bind(cursoId),
+    ...juegoIds.map((id) =>
+      env.DB.prepare("INSERT INTO asignacion (curso_id, juego_id, updated_at) VALUES (?1, ?2, ?3)").bind(cursoId, id, t)
+    )
+  ]);
+
+  return listarJuegosDeCurso(env, cursoId);
+}
+
+/** GET /api/docente/juegos/:juegoId/sumo-primero?nivel=2-basico */
+export async function obtenerSumoPrimero(env, juegoId, nivel) {
+  if (!existeJuego(juegoId)) return json({ error: "Juego no encontrado." }, 404);
+  if (!NIVELES_VALIDOS.includes(nivel)) return json({ error: "Nivel invalido." }, 400);
+
+  const fila = await env.DB.prepare(
+    "SELECT tomo, capitulo, titulo, paginas FROM juego_sumo_primero WHERE juego_id = ?1 AND nivel = ?2"
+  ).bind(juegoId, nivel).first();
+
+  return json({
+    sumoPrimero: fila
+      ? { tomo: fila.tomo, capitulo: fila.capitulo, titulo: fila.titulo, paginas: fila.paginas }
+      : { tomo: null, capitulo: null, titulo: null, paginas: null }
+  });
+}
+
+/** PUT /api/docente/juegos/:juegoId/sumo-primero  { nivel, tomo?, capitulo?, titulo?, paginas? } */
+export async function guardarSumoPrimero(request, env, juegoId) {
+  if (!existeJuego(juegoId)) return json({ error: "Juego no encontrado." }, 404);
+
+  const body = await leerJson(request);
+  if (!NIVELES_VALIDOS.includes(body.nivel)) return json({ error: "Nivel invalido." }, 400);
+
+  const campo = (v) => (v === undefined || v === null ? null : String(v).trim().slice(0, 120) || null);
+  const t = ahora();
+
+  await env.DB.prepare(
+    "INSERT INTO juego_sumo_primero (juego_id, nivel, tomo, capitulo, titulo, paginas, updated_at) " +
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) " +
+    "ON CONFLICT(juego_id, nivel) DO UPDATE SET tomo = ?3, capitulo = ?4, titulo = ?5, paginas = ?6, updated_at = ?7"
+  ).bind(juegoId, body.nivel, campo(body.tomo), campo(body.capitulo), campo(body.titulo), campo(body.paginas), t).run();
+
+  return obtenerSumoPrimero(env, juegoId, body.nivel);
+}
+
 /* -------------------------------- avance --------------------------------- */
 
 /**
@@ -413,6 +493,22 @@ export async function obtenerAvance(env, cursoId) {
     "GROUP BY a.oa_code ORDER BY a.oa_code"
   ).bind(cursoId).all();
 
+  // Desglose de errores tipicos (solo juegos con detalle por salto, ver
+  // cloudflare/intentos.mjs): cuantas veces cada tipo_error aparecio, por OA.
+  const { results: erroresCrudos } = await env.DB.prepare(
+    "SELECT i.oa_code, sa.tipo_error, COUNT(*) AS cantidad " +
+    "FROM salto sa JOIN intento i ON i.id = sa.intento_id JOIN estudiante e ON e.id = i.estudiante_id " +
+    "WHERE e.curso_id = ?1 AND e.activo = 1 AND sa.correcto = 0 AND sa.tipo_error IS NOT NULL " +
+    "GROUP BY i.oa_code, sa.tipo_error"
+  ).bind(cursoId).all();
+
+  const erroresPorOA = {};
+  for (const fila of erroresCrudos || []) {
+    if (!fila.oa_code) continue;
+    erroresPorOA[fila.oa_code] ??= {};
+    erroresPorOA[fila.oa_code][fila.tipo_error] = fila.cantidad;
+  }
+
   function conPrecision({ intentosTotal, preguntasTotal, preguntasCorrectas, ...resto }) {
     const total = Number(preguntasTotal) || 0;
     const correctas = Number(preguntasCorrectas) || 0;
@@ -436,7 +532,8 @@ export async function obtenerAvance(env, cursoId) {
     })),
     porOA: (porOA || []).map((f) => conPrecision({
       oaCode: f.oa_code, totalEstudiantes: f.total_estudiantes,
-      intentosTotal: f.intentos_total, preguntasTotal: f.preguntas_total, preguntasCorrectas: f.preguntas_correctas
+      intentosTotal: f.intentos_total, preguntasTotal: f.preguntas_total, preguntasCorrectas: f.preguntas_correctas,
+      erroresPorTipo: erroresPorOA[f.oa_code] || {}
     }))
   });
 }

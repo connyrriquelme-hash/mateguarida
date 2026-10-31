@@ -42,5 +42,14 @@ export const api = {
   actualizarEstudiante: (id, cambios) => llamar(`/api/docente/estudiantes/${encodeURIComponent(id)}`, { metodo: 'PATCH', cuerpo: cambios }),
   eliminarEstudiante: (id) => llamar(`/api/docente/estudiantes/${encodeURIComponent(id)}`, { metodo: 'DELETE' }),
 
-  obtenerAvance: (cursoId) => llamar(`/api/docente/cursos/${encodeURIComponent(cursoId)}/avance`)
+  obtenerAvance: (cursoId) => llamar(`/api/docente/cursos/${encodeURIComponent(cursoId)}/avance`),
+
+  listarJuegosDeCurso: (cursoId) => llamar(`/api/docente/cursos/${encodeURIComponent(cursoId)}/juegos`),
+  asignarJuegos: (cursoId, juegoIds) =>
+    llamar(`/api/docente/cursos/${encodeURIComponent(cursoId)}/juegos`, { metodo: 'PUT', cuerpo: { juegoIds } }),
+
+  obtenerSumoPrimero: (juegoId, nivel) =>
+    llamar(`/api/docente/juegos/${encodeURIComponent(juegoId)}/sumo-primero?nivel=${encodeURIComponent(nivel)}`),
+  guardarSumoPrimero: (juegoId, datos) =>
+    llamar(`/api/docente/juegos/${encodeURIComponent(juegoId)}/sumo-primero`, { metodo: 'PUT', cuerpo: datos })
 };

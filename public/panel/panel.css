@@ -79,3 +79,26 @@
 
 .panel-pestanas { display: flex; gap: 0.5rem; }
 .panel-error { color: var(--rojo); font-weight: 700; }
+
+.panel-juego {
+  background: white;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.panel-juego label { font-weight: 700; }
+
+.panel-sumo { margin-top: 0.5rem; }
+.panel-sumo summary { cursor: pointer; font-size: 0.9rem; color: var(--azul); }
+.panel-formulario--compacto {
+  max-width: none;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+}
+
+.panel-errores {
+  font-size: 0.85rem;
+  color: #6B7A85;
+  margin: 0;
+}

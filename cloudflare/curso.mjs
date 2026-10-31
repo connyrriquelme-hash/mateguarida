@@ -14,6 +14,7 @@
  */
 
 import { obtenerIp, revisarBloqueo, registrarFallo, limpiarFallos } from "./limitador.mjs";
+import { JUEGOS } from "./juegos.mjs";
 
 const DURACION_SESION_HORAS = 12;
 
@@ -61,13 +62,23 @@ export async function manejarEntrada(request, env) {
     "FROM estudiante WHERE curso_id = ?1 AND activo = 1 ORDER BY nombre COLLATE NOCASE"
   ).bind(curso.id).all();
 
+  const { results: asignados } = await env.DB.prepare(
+    "SELECT juego_id FROM asignacion WHERE curso_id = ?1"
+  ).bind(curso.id).all();
+
+  const juegos = (asignados || [])
+    .map((a) => JUEGOS[a.juego_id])
+    .filter(Boolean)
+    .map((j) => ({ id: j.id, nombre: j.nombre, descripcion: j.descripcion, ruta: j.ruta }));
+
   return json({
     curso: { id: curso.id, nombre: curso.nombre, nivel: curso.nivel },
     estudiantes: (estudiantes || []).map((e) => ({
       id: e.id,
       nombre: e.nombre,
       inicialApellido: e.inicial_apellido || null
-    }))
+    })),
+    juegos
   });
 }
 
