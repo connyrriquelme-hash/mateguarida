@@ -1,0 +1,99 @@
+# Mateguarida
+
+Plataforma de Matemática para NT1, NT2 y 1º a 4º Básico. Hermana de
+Lectoguarida (`../lectoguarida`), con el enfoque todo en uno de Innovamat:
+juegos para los estudiantes, clase guiada para el docente y seguimiento del
+avance por OA.
+
+Dominio: **mateguarida.com** (comprado, en la cuenta de Cloudflare de Conny).
+
+## Reglas de contenido (obligatorias, no negociables)
+
+- El corpus del RAG solo puede contener **documentos públicos del Mineduc**
+  (Bases Curriculares de Educación Parvularia, Bases Curriculares de 1º a 6º
+  básico, Programas de Estudio de Matemática) y **materiales propios** que
+  Conny entregue.
+- **Prohibido** descargar, copiar o indexar textos escolares de editoriales y
+  el contenido de **Sumo Primero**. Sumo Primero se usa solo como
+  **referencia bibliográfica** (nivel, tomo, capítulo) para vincular cada
+  juego con el libro que el curso ya tiene.
+- Toda actividad y juego es **original** y declara **nivel, eje y OA**.
+
+## Arquitectura (Cloudflare, mismo stack que Lectoguarida)
+
+- **Worker** para la app (`main` apunta al worker; `assets` sirve `public/`).
+- **D1** para cursos, estudiantes, juegos, asignaciones, intentos y avance por OA.
+- **R2** para el corpus curricular.
+- **AutoRAG** (Vectorize + Workers AI) para consultar el corpus.
+- La IA se usa **solo en el panel docente**, para generar **borradores** que
+  Conny revisa y aprueba. **Los niños nunca interactúan con IA en vivo.**
+- **Entrada de estudiantes sin PIN**: el niño entra eligiendo su nombre de la
+  lista del curso. El código de curso se guarda en el dispositivo (lo escribe
+  la profesora una vez por tablet) y es lo que mantiene los nombres fuera de
+  internet abierto.
+
+## Dominio y despliegue
+
+Se publica como dominio personalizado del Worker:
+
+```jsonc
+"routes": [
+  { "pattern": "mateguarida.com",     "custom_domain": true },
+  { "pattern": "www.mateguarida.com", "custom_domain": true }
+]
+```
+
+**Antes de cada despliegue que toque el dominio**: recordarle a Conny que
+revise en el panel de Cloudflare (DNS de mateguarida.com) que **no existan
+registros A ni CNAME** para `mateguarida.com` ni `www.mateguarida.com`. Si
+existen, bloquean el deploy del custom domain.
+
+## Entorno de trabajo
+
+- Windows 11 con **PowerShell 5.1**: **nunca encadenar con `&&`**. Usar
+  `comando; if ($?) { siguiente }` o un comando por línea.
+- `npx.cmd wrangler ...` para los comandos de Cloudflare.
+- **No modificar nada en `../lectoguarida`.** Es solo referencia de lectura.
+
+## Etapas (una por commit; detenerse al final de cada una y esperar aprobación)
+
+1. **Mapa curricular** — descargar los documentos públicos a `/corpus` y crear
+   `/data/oa.json` con cada OA (código, nivel, eje, texto, indicadores) desde
+   NT1 a 4º Básico. Entregar resumen por nivel y eje.
+2. **Base del proyecto** — estructura, `wrangler.toml`, esquema D1 (cursos,
+   estudiantes, juegos, asignaciones, intentos, avance por OA) y la pantalla de
+   entrada adaptada de Lectoguarida. Desplegar una portada «Próximamente» en
+   mateguarida.com para probar el dominio.
+3. **Panel docente** — crear curso, ingresar estudiantes, asignar juegos por
+   nivel, seguimiento por estudiante y por OA.
+4. **Primer minijuego** — 2º Básico, conteo de 2 en 2, 5 en 5 y 10 en 10. De 2 a
+   4 minutos, visual, con audio y botones grandes. Registra avance en D1.
+   Sirve en tablet y pizarra digital.
+5. **RAG** — subir `/corpus` a R2, guiar paso a paso la creación de la instancia
+   de AutoRAG en el panel de Cloudflare y conectarla al Worker.
+6. **Generador de clases** — dado un OA, propone una clase (inicio, juego,
+   cierre, ticket de salida) basada en el corpus, con referencia a Sumo Primero,
+   guardada como borrador editable.
+7. **Publicación final** en mateguarida.com y prueba completa en producción.
+
+## Qué se reutiliza de Lectoguarida
+
+La app vive en `../lectoguarida/outputs/Lectoguarida-Windows/`:
+
+| Qué | Dónde en Lectoguarida | Para qué en Mateguarida |
+|---|---|---|
+| Catálogo de OA | `public/expedicion/solo/game-content/curriculum/oa-oficiales.json` | formato de `data/oa.json` (código, nivel, eje, texto + `fuentes` con documento, url y fecha de consulta) |
+| Juego → OA | `.../curriculum/juegos-oa.json` | vincular cada minijuego con sus OA, con `porQue` y `alcance` |
+| OA en el servidor | `cloudflare/curriculo.mjs` | el servidor **deduce** los OA del juego y el nivel; nunca confía en los que manda el cliente |
+| Esquema D1 | `cloudflare/schema.sql` | migraciones idempotentes (`CREATE ... IF NOT EXISTS`), `curso`, `asignacion`, evidencia por intento + agregados `learning_oa_profile` |
+| Entrada sin PIN | `public/app.js`, `cloudflare/worker.mjs` | elegir el nombre de la lista; código de curso persistido en el dispositivo |
+| Service worker | `public/sw.js` | red primero para código y contenido; `/api/` nunca pasa por el SW; cola de evidencia offline |
+| Config Worker | `wrangler.jsonc` | `assets` + `run_worker_first`, binding D1, custom domains |
+
+## Privacidad (heredada de Lectoguarida)
+
+- La evidencia no guarda nombre, audio, voz, IP ni huella de navegador. El
+  vínculo entre `student_id` y el nombre real vive solo en la nómina.
+- Ningún archivo publicado contiene nombres de estudiantes, el nombre de la
+  profesora ni PIN. Las capturas y los datos de prueba usan nombres inventados.
+- Una pérdida de datos de un niño **nunca** es silenciosa: se avisa en el panel.

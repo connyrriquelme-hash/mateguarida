@@ -1,0 +1,895 @@
+{
+  "version": "1.0.0",
+  "generado": "2026-10-30",
+  "description": "Catalogo oficial de los Objetivos de Aprendizaje (OA) de Matematica que trabaja Mateguarida, copiados de los documentos del Mineduc. Es la unica fuente de codigos OA para el resto del proyecto. Solo incluye OA de CONTENIDO (numerados, asociados a un eje); las Habilidades y Actitudes transversales de cada nivel (letras a-n, sin eje propio) quedan fuera de este archivo a proposito y pueden agregarse despues como una lista aparte si se necesitan. Las vinetas internas de un mismo OA van separadas por ' • ' (igual convencion que oa-oficiales.json de Lectoguarida). indicadores queda vacio ([]) en esta etapa para TODOS los niveles, a proposito. Las Bases Curriculares (fuente de codigo/nivel/eje/texto) no incluyen indicadores. Los Programas de Estudio de Matematica 1-4 basico SI tienen una columna 'Indicadores de Evaluacion Sugeridos' por OA, pero su extraccion automatica desde el PDF resulto poco confiable (vinetas con caracteres corruptos, lineas de continuacion sin marca, y un recuadro de ejemplo en las paginas 24-25/53-54 de cada programa que reutiliza contenido de 4basico como plantilla ilustrativa, mezclado por pdftotext con el contenido real del nivel). Mineduc mismo los califica de 'sugeridos' (el docente puede complementarlos), por lo que se prefirio dejarlos vacios antes que arriesgar texto truncado o de otro nivel presentado como oficial. Quedan pendientes para una revision manual futura, pagina por pagina, de los Programas ya descargados en /corpus.",
+  "fuentes": {
+    "transicion": {
+      "documento": "Bases Curriculares de la Educacion Parvularia (2018). Ambito Interaccion y Comprension del Entorno, Nucleo Pensamiento Matematico, Tercer Nivel (Transicion), paginas 96-99.",
+      "url": "https://www.curriculumnacional.cl/614/articles-115247_bases.pdf",
+      "archivo_local": "corpus/bases-parvularia-nucleo-pensamiento-matematico-extracto.pdf",
+      "consultado": "2026-10-30"
+    },
+    "1-basico": {
+      "documento": "Bases Curriculares 1º a 6º Basico (reedicion 2024). Matematica, 1º basico, Objetivos de Aprendizaje, pagina 227-229.",
+      "url": "https://www.curriculumnacional.cl/sites/default/files/newtenberg/614/articles-22394_bases.pdf",
+      "archivo_local": "corpus/bases-curriculares-1-6-basico.pdf",
+      "consultado": "2026-10-30"
+    },
+    "2-basico": {
+      "documento": "Bases Curriculares 1º a 6º Basico (reedicion 2024). Matematica, 2º basico, Objetivos de Aprendizaje, pagina 231-233.",
+      "url": "https://www.curriculumnacional.cl/sites/default/files/newtenberg/614/articles-22394_bases.pdf",
+      "archivo_local": "corpus/bases-curriculares-1-6-basico.pdf",
+      "consultado": "2026-10-30"
+    },
+    "3-basico": {
+      "documento": "Bases Curriculares 1º a 6º Basico (reedicion 2024). Matematica, 3º basico, Objetivos de Aprendizaje, pagina 235-239.",
+      "url": "https://www.curriculumnacional.cl/sites/default/files/newtenberg/614/articles-22394_bases.pdf",
+      "archivo_local": "corpus/bases-curriculares-1-6-basico.pdf",
+      "consultado": "2026-10-30"
+    },
+    "4-basico": {
+      "documento": "Bases Curriculares 1º a 6º Basico (reedicion 2024). Matematica, 4º basico, Objetivos de Aprendizaje, pagina 241-245.",
+      "url": "https://www.curriculumnacional.cl/sites/default/files/newtenberg/614/articles-22394_bases.pdf",
+      "archivo_local": "corpus/bases-curriculares-1-6-basico.pdf",
+      "consultado": "2026-10-30"
+    }
+  },
+  "oa": [
+    {
+      "codigo": "NT-PM-OA-01",
+      "nivel": "transicion",
+      "numero": 1,
+      "eje": "Pensamiento Matemático",
+      "texto": "Crear patrones sonoros, visuales, gestuales, corporales u otros, de dos o tres elementos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-02",
+      "nivel": "transicion",
+      "numero": 2,
+      "eje": "Pensamiento Matemático",
+      "texto": "Experimentar con diversos objetos estableciendo relaciones al clasificar por dos o tres atributos a la vez (forma, color, tamaño, función, masa, materialidad, entre otros) y seriar por altura, ancho, longitud o capacidad para contener.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-03",
+      "nivel": "transicion",
+      "numero": 3,
+      "eje": "Pensamiento Matemático",
+      "texto": "Comunicar la posición de objetos y personas respecto de un punto u objeto de referencia, empleando conceptos de ubicación (dentro/fuera; encima/debajo/entre; al frente de/detrás de); distancia (cerca/lejos) y dirección (adelante/atrás/hacia el lado), en situaciones lúdicas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-04",
+      "nivel": "transicion",
+      "numero": 4,
+      "eje": "Pensamiento Matemático",
+      "texto": "Emplear cuantificadores, tales como: “más que”, “menos que”, “igual que”, al comparar cantidades de objetos en situaciones cotidianas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-05",
+      "nivel": "transicion",
+      "numero": 5,
+      "eje": "Pensamiento Matemático",
+      "texto": "Orientarse temporalmente en situaciones cotidianas, empleando nociones y relaciones de secuencia (antes/ahora/después/al mismo tiempo, día/noche), frecuencia (siempre/a veces/nunca) y duración (larga/corta).",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-06",
+      "nivel": "transicion",
+      "numero": 6,
+      "eje": "Pensamiento Matemático",
+      "texto": "Emplear los números, para contar, identificar, cuantificar y comparar cantidades hasta el 20 e indicar orden o posición de algunos elementos en situaciones cotidianas o juegos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-07",
+      "nivel": "transicion",
+      "numero": 7,
+      "eje": "Pensamiento Matemático",
+      "texto": "Representar números y cantidades hasta el 10, en forma concreta, pictórica y simbólica.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-08",
+      "nivel": "transicion",
+      "numero": 8,
+      "eje": "Pensamiento Matemático",
+      "texto": "Resolver problemas simples de manera concreta y pictórica agregando o quitando hasta 10 elementos, comunicando las acciones llevadas a cabo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-09",
+      "nivel": "transicion",
+      "numero": 9,
+      "eje": "Pensamiento Matemático",
+      "texto": "Representar objetos desde arriba, del lado, abajo, a través de dibujos, fotografías o TICs, formulando conjeturas frente a sus descubrimientos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-10",
+      "nivel": "transicion",
+      "numero": 10,
+      "eje": "Pensamiento Matemático",
+      "texto": "Identificar atributos de figuras 2D y 3D, tales como: forma, cantidad de lados, vértices, caras, que observa en forma directa o a través de TICs.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-11",
+      "nivel": "transicion",
+      "numero": 11,
+      "eje": "Pensamiento Matemático",
+      "texto": "Emplear medidas no estandarizadas, para determinar longitud de objetos, registrando datos, en diversas situaciones lúdicas o actividades cotidianas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "NT-PM-OA-12",
+      "nivel": "transicion",
+      "numero": 12,
+      "eje": "Pensamiento Matemático",
+      "texto": "Comunicar el proceso desarrollado en la resolución de problemas concretos, identificando la pregunta, acciones y posibles respuestas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-01",
+      "nivel": "1-basico",
+      "numero": 1,
+      "eje": "Números y Operaciones",
+      "texto": "Contar números del 0 al 100 de 1 en 1, de 2 en 2, de 5 en 5 y de 10 en 10, hacia adelante y hacia atrás, empezando por cualquier número menor que 100.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-02",
+      "nivel": "1-basico",
+      "numero": 2,
+      "eje": "Números y Operaciones",
+      "texto": "Identificar el orden de los elementos de una serie, utilizando números ordinales del primero (1º) al décimo (10º).",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-03",
+      "nivel": "1-basico",
+      "numero": 3,
+      "eje": "Números y Operaciones",
+      "texto": "Leer números del 0 al 20 y representarlos en forma concreta, pictórica y simbólica.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-04",
+      "nivel": "1-basico",
+      "numero": 4,
+      "eje": "Números y Operaciones",
+      "texto": "Comparar y ordenar números del 0 al 20 de menor a mayor y/o viceversa, utilizando material concreto y/o usando software educativo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-05",
+      "nivel": "1-basico",
+      "numero": 5,
+      "eje": "Números y Operaciones",
+      "texto": "Estimar cantidades hasta 20 en situaciones concretas, usando un referente.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-06",
+      "nivel": "1-basico",
+      "numero": 6,
+      "eje": "Números y Operaciones",
+      "texto": "Componer y descomponer números del 0 a 20 de manera aditiva, en forma concreta, pictórica y simbólica.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-07",
+      "nivel": "1-basico",
+      "numero": 7,
+      "eje": "Números y Operaciones",
+      "texto": "Describir y aplicar estrategias de cálculo mental para las adiciones y las sustracciones hasta 20: • conteo hacia adelante y atrás • completar 10 • dobles",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-08",
+      "nivel": "1-basico",
+      "numero": 8,
+      "eje": "Números y Operaciones",
+      "texto": "Determinar las unidades y decenas en números del 0 al 20, agrupando de a 10, de manera concreta, pictórica y simbólica.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-09",
+      "nivel": "1-basico",
+      "numero": 9,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden la adición y la sustracción de números del 0 al 20 progresivamente, de 0 a 5, de 6 a 10, de 11 a 20 con dos sumandos: • usando un lenguaje cotidiano para describir acciones desde su propia experiencia • representando adiciones y sustracciones con material concreto y pictórico, de manera manual y/o usando software educativo • representando el proceso en forma simbólica • resolviendo problemas en contextos familiares • creando problemas matemáticos y resolviéndolos",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-10",
+      "nivel": "1-basico",
+      "numero": 10,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que la adición y la sustracción son operaciones inversas, de manera concreta, pictórica y simbólica.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-11",
+      "nivel": "1-basico",
+      "numero": 11,
+      "eje": "Patrones y Álgebra",
+      "texto": "Reconocer, describir, crear y continuar patrones repetitivos (sonidos, figuras, ritmos...) y patrones numéricos hasta el 20, crecientes y decrecientes, usando material concreto, pictórico y simbólico, de manera manual y/o por medio de software educativo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-12",
+      "nivel": "1-basico",
+      "numero": 12,
+      "eje": "Patrones y Álgebra",
+      "texto": "Describir y registrar la igualdad y la desigualdad como equilibrio y desequilibrio, usando una balanza en forma concreta, pictórica y simbólica del 0 al 20, usando el símbolo igual (=).",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-13",
+      "nivel": "1-basico",
+      "numero": 13,
+      "eje": "Geometría",
+      "texto": "Describir la posición de objetos y personas con relación a sí mismos y a otros objetos y personas, usando un lenguaje común (como derecha e izquierda).",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-14",
+      "nivel": "1-basico",
+      "numero": 14,
+      "eje": "Geometría",
+      "texto": "Identificar en el entorno figuras 3D y figuras 2D y relacionarlas, usando material concreto.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-15",
+      "nivel": "1-basico",
+      "numero": 15,
+      "eje": "Geometría",
+      "texto": "Identificar y dibujar líneas rectas y curvas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-16",
+      "nivel": "1-basico",
+      "numero": 16,
+      "eje": "Medición",
+      "texto": "Usar unidades no estandarizadas de tiempo para comparar la duración de eventos cotidianos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-17",
+      "nivel": "1-basico",
+      "numero": 17,
+      "eje": "Medición",
+      "texto": "Usar un lenguaje cotidiano para secuenciar eventos en el tiempo: días de la semana, meses del año y algunas fechas significativas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-18",
+      "nivel": "1-basico",
+      "numero": 18,
+      "eje": "Medición",
+      "texto": "Identificar y comparar la longitud de objetos, usando palabras como largo y corto.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-19",
+      "nivel": "1-basico",
+      "numero": 19,
+      "eje": "Datos y Probabilidades",
+      "texto": "Recolectar y registrar datos para responder preguntas estadísticas sobre sí mismo y el entorno, usando bloques, tablas de conteo y pictogramas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA01-OA-20",
+      "nivel": "1-basico",
+      "numero": 20,
+      "eje": "Datos y Probabilidades",
+      "texto": "Construir, leer e interpretar pictogramas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-01",
+      "nivel": "2-basico",
+      "numero": 1,
+      "eje": "Números y Operaciones",
+      "texto": "Contar números del 0 al 1 000 de 2 en 2, de 5 en 5, de 10 en 10 y de 100 en 100, hacia adelante y hacia atrás, empezando por cualquier número menor que 1 000.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-02",
+      "nivel": "2-basico",
+      "numero": 2,
+      "eje": "Números y Operaciones",
+      "texto": "Leer números del 0 al 100 y representarlos en forma concreta, pictórica y simbólica.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-03",
+      "nivel": "2-basico",
+      "numero": 3,
+      "eje": "Números y Operaciones",
+      "texto": "Comparar y ordenar números del 0 al 100 de menor a mayor y viceversa, usando material concreto y monedas nacionales de manera manual y/o por medio de software educativo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-04",
+      "nivel": "2-basico",
+      "numero": 4,
+      "eje": "Números y Operaciones",
+      "texto": "Estimar cantidades hasta 100 en situaciones concretas, usando un referente.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-05",
+      "nivel": "2-basico",
+      "numero": 5,
+      "eje": "Números y Operaciones",
+      "texto": "Componer y descomponer números del 0 a 100 de manera aditiva, en forma concreta, pictórica y simbólica.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-06",
+      "nivel": "2-basico",
+      "numero": 6,
+      "eje": "Números y Operaciones",
+      "texto": "Describir y aplicar estrategias de cálculo mental para adiciones y sustracciones hasta 20: • completar 10 • usar dobles y mitades • “uno más uno menos” • “dos más dos menos” • usar la reversibilidad de las operaciones",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-07",
+      "nivel": "2-basico",
+      "numero": 7,
+      "eje": "Números y Operaciones",
+      "texto": "Identificar las unidades y decenas en números del 0 al 100, representando las cantidades de acuerdo a su valor posicional, con material concreto, pictórico y simbólico.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-08",
+      "nivel": "2-basico",
+      "numero": 8,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar y explicar de manera concreta, pictórica y simbólica el efecto de sumar y restar 0 a un número.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-09",
+      "nivel": "2-basico",
+      "numero": 9,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprende la adición y la sustracción en el ámbito del 0 al 100: • usando un lenguaje cotidiano y matemático para describir acciones desde su propia experiencia • resolviendo problemas con una variedad de representaciones concretas y pictóricas, de manera manual y/o usando software educativo • registrando el proceso en forma simbólica • aplicando los resultados de las adiciones y las sustracciones de los números del 0 a 20 sin realizar cálculos • aplicando el algoritmo de la adición y la sustracción sin considerar reserva • creando problemas matemáticos en contextos familiares y resolviéndolos",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-10",
+      "nivel": "2-basico",
+      "numero": 10,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprende la relación entre la adición y la sustracción al usar la “familia de operaciones” en cálculos aritméticos y la resolución de problemas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-11",
+      "nivel": "2-basico",
+      "numero": 11,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprende la multiplicación: • usando representaciones concretas y pictóricas • expresando una multiplicación como una adición de sumandos iguales • usando la distributividad como estrategia para construir las tablas del 2, del 5 y del 10 • resolviendo problemas que involucren las tablas del 2, del 5 y del 10.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-12",
+      "nivel": "2-basico",
+      "numero": 12,
+      "eje": "Patrones y Álgebra",
+      "texto": "Crear, representar y continuar una variedad de patrones numéricos y completar los elementos faltantes, de manera manual y/o usando software educativo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-13",
+      "nivel": "2-basico",
+      "numero": 13,
+      "eje": "Patrones y Álgebra",
+      "texto": "Demostrar, explicar y registrar la igualdad y la desigualdad en forma concreta y pictórica del 0 al 20, usando el símbolo igual (=) y los símbolos no igual (>, <).",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-14",
+      "nivel": "2-basico",
+      "numero": 14,
+      "eje": "Geometría",
+      "texto": "Representar y describir la posición de objetos y personas con relación a sí mismos y a otros objetos y personas, incluyendo derecha e izquierda y usando material concreto y dibujos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-15",
+      "nivel": "2-basico",
+      "numero": 15,
+      "eje": "Geometría",
+      "texto": "Describir, comparar y construir figuras 2D (triángulos, cuadrados, rectángulos y círculos) con material concreto.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-16",
+      "nivel": "2-basico",
+      "numero": 16,
+      "eje": "Geometría",
+      "texto": "Describir, comparar y construir figuras 3D (cubos, paralelepípedos, esferas y conos) con diversos materiales.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-17",
+      "nivel": "2-basico",
+      "numero": 17,
+      "eje": "Medición",
+      "texto": "Identificar días, semanas, meses y fechas en el calendario.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-18",
+      "nivel": "2-basico",
+      "numero": 18,
+      "eje": "Medición",
+      "texto": "Leer horas y medias horas en relojes digitales, en el contexto de la resolución de problemas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-19",
+      "nivel": "2-basico",
+      "numero": 19,
+      "eje": "Medición",
+      "texto": "Determinar la longitud de objetos, usando unidades de medidas no estandarizadas y unidades estandarizadas (cm y m), en el contexto de la resolución de problemas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-20",
+      "nivel": "2-basico",
+      "numero": 20,
+      "eje": "Datos y Probabilidades",
+      "texto": "Recolectar y registrar datos para responder preguntas estadísticas sobre juegos con monedas y dados, usando bloques y tablas de conteo y pictogramas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-21",
+      "nivel": "2-basico",
+      "numero": 21,
+      "eje": "Datos y Probabilidades",
+      "texto": "Registrar en tablas y gráficos de barra simple, resultados de juegos aleatorios con dados y monedas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA02-OA-22",
+      "nivel": "2-basico",
+      "numero": 22,
+      "eje": "Datos y Probabilidades",
+      "texto": "Construir, leer e interpretar pictogramas con escala y gráficos de barra simple.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-01",
+      "nivel": "3-basico",
+      "numero": 1,
+      "eje": "Números y Operaciones",
+      "texto": "Contar números del 0 al 1 000 de 5 en 5, de 10 en 10, de 100 en 100: • empezando por cualquier número natural menor que 1.000 • de 3 en 3, de 4 en 4..., empezando por cualquier múltiplo del número correspondiente",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-02",
+      "nivel": "3-basico",
+      "numero": 2,
+      "eje": "Números y Operaciones",
+      "texto": "Leer números hasta 1.000 y representarlos en forma concreta, pictórica y simbólica.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-03",
+      "nivel": "3-basico",
+      "numero": 3,
+      "eje": "Números y Operaciones",
+      "texto": "Comparar y ordenar números naturales hasta 1.000, utilizando la recta numérica o la tabla posicional de manera manual y/o por medio de software educativo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-04",
+      "nivel": "3-basico",
+      "numero": 4,
+      "eje": "Números y Operaciones",
+      "texto": "Describir y aplicar estrategias de cálculo mental para las adiciones y las sustracciones hasta 100: • por descomposición • completar hasta la decena más cercana • usar dobles • sumar en vez de restar • aplicar la asociatividad",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-05",
+      "nivel": "3-basico",
+      "numero": 5,
+      "eje": "Números y Operaciones",
+      "texto": "Identificar y describir las unidades, las decenas y las centenas en números del 0 al 1.000, representando las cantidades de acuerdo a su valor posicional, con material concreto, pictórico y simbólico.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-06",
+      "nivel": "3-basico",
+      "numero": 6,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden la adición y la sustracción de números del 0 al 1.000: • usando estrategias personales con y sin material concreto • creando y resolviendo problemas de adición y sustracción que involucren operaciones combinadas, en forma concreta, pictórica y simbólica, de manera manual y/o por medio de software educativo • aplicando los algoritmos con y sin reserva, progresivamente, en la adición de hasta cuatro sumandos y en la sustracción de hasta un sustraendo",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-07",
+      "nivel": "3-basico",
+      "numero": 7,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden la relación entre la adición y la sustracción, usando la “familia de operaciones” en cálculos aritméticos y en la resolución de problemas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-08",
+      "nivel": "3-basico",
+      "numero": 8,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden las tablas de multiplicar hasta el 10 de manera progresiva: • usando representaciones concretas y pictóricas • expresando una multiplicación como una adición de sumandos iguales • usando la distributividad como estrategia para construir las tablas hasta el 10 • aplicando los resultados de las tablas de multiplicación hasta 10 · 10, sin realizar cálculos • resolviendo problemas que involucren las tablas aprendidas hasta el 10",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-09",
+      "nivel": "3-basico",
+      "numero": 9,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden la división en el contexto de las tablas de hasta 10 · 10: • representando y explicando la división como repartición y agrupación en partes iguales, con material concreto y pictórico • creando y resolviendo problemas en contextos que incluyan la repartición y la agrupación • expresando la división como una sustracción repetida • describiendo y aplicando la relación inversa entre la división y la multiplicación • aplicando los resultados de las tablas de multiplicación hasta 10 · 10, sin realizar cálculos",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-10",
+      "nivel": "3-basico",
+      "numero": 10,
+      "eje": "Números y Operaciones",
+      "texto": "Resolver problemas rutinarios en contextos cotidianos, que incluyan dinero e involucren las cuatro operaciones (no combinadas).",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-11",
+      "nivel": "3-basico",
+      "numero": 11,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden las fracciones de uso común: 1/2, 1/3, 1/4, 2/3 y 3/4: • explicando que una fracción representa la parte de un todo, de manera concreta, pictórica, simbólica, de forma manual y/o con software educativo • describiendo situaciones en las cuales se puede usar fracciones • comparando fracciones de un mismo todo, de igual denominador",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-12",
+      "nivel": "3-basico",
+      "numero": 12,
+      "eje": "Patrones y Álgebra",
+      "texto": "Generar, describir y registrar patrones numéricos, usando una variedad de estrategias en tablas del 100, de manera manual y/o con software educativo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-13",
+      "nivel": "3-basico",
+      "numero": 13,
+      "eje": "Patrones y Álgebra",
+      "texto": "Resolver ecuaciones de un paso que involucren adiciones y sustracciones y un símbolo geométrico que represente un número desconocido, en forma pictórica y simbólica del 0 al 100.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-14",
+      "nivel": "3-basico",
+      "numero": 14,
+      "eje": "Geometría",
+      "texto": "Describir la localización de un objeto en un mapa simple o en una cuadrícula.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-15",
+      "nivel": "3-basico",
+      "numero": 15,
+      "eje": "Geometría",
+      "texto": "Demostrar que comprenden la relación que existe entre figuras 3D y figuras 2D: • construyendo una figura 3D a partir de una red (plantilla) • desplegando la figura 3D",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-16",
+      "nivel": "3-basico",
+      "numero": 16,
+      "eje": "Geometría",
+      "texto": "Describir cubos, paralelepípedos, esferas, conos, cilindros y pirámides de acuerdo a la forma de sus caras y el número de aristas y vértices.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-17",
+      "nivel": "3-basico",
+      "numero": 17,
+      "eje": "Geometría",
+      "texto": "Reconocer en el entorno figuras 2D que están trasladadas, reflejadas y rotadas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-18",
+      "nivel": "3-basico",
+      "numero": 18,
+      "eje": "Geometría",
+      "texto": "Demostrar que comprenden el concepto de ángulo: • identificando ejemplos de ángulos en el entorno • estimando la medida de ángulos, usando como referente ángulos de 45º y de 90º",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-19",
+      "nivel": "3-basico",
+      "numero": 19,
+      "eje": "Medición",
+      "texto": "Leer e interpretar líneas de tiempo y calendarios.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-20",
+      "nivel": "3-basico",
+      "numero": 20,
+      "eje": "Medición",
+      "texto": "Leer y registrar el tiempo en horas, medias horas, cuartos de hora y minutos en relojes análogos y digitales.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-21",
+      "nivel": "3-basico",
+      "numero": 21,
+      "eje": "Medición",
+      "texto": "Demostrar que comprenden el perímetro de una figura regular e irregular: • midiendo y registrando el perímetro de figuras del entorno en el contexto de la resolución de problemas • determinando el perímetro de un cuadrado y de un rectángulo",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-22",
+      "nivel": "3-basico",
+      "numero": 22,
+      "eje": "Medición",
+      "texto": "Demostrar que comprende la medición del peso (g y kg): • comparando y ordenando dos o más objetos a partir de su peso de manera informal • usando modelos para explicar la relación que existe entre gramos y kilogramos • estimando el peso de objetos de uso cotidiano, usando referentes • midiendo y registrando el peso de objetos en números y en fracciones de uso común, en el contexto de la resolución de problemas",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-23",
+      "nivel": "3-basico",
+      "numero": 23,
+      "eje": "Datos y Probabilidades",
+      "texto": "Realizar encuestas, clasificar y organizar los datos obtenidos en tablas y visualizarlos en gráficos de barra.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-24",
+      "nivel": "3-basico",
+      "numero": 24,
+      "eje": "Datos y Probabilidades",
+      "texto": "Registrar y ordenar datos obtenidos de juegos aleatorios con dados y monedas, encontrando el menor, el mayor y estimando el punto medio entre ambos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-25",
+      "nivel": "3-basico",
+      "numero": 25,
+      "eje": "Datos y Probabilidades",
+      "texto": "Construir, leer e interpretar pictogramas y gráficos de barra simple con escala, de acuerdo a información recolectada o dada.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA03-OA-26",
+      "nivel": "3-basico",
+      "numero": 26,
+      "eje": "Datos y Probabilidades",
+      "texto": "Representar datos usando diagramas de puntos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-01",
+      "nivel": "4-basico",
+      "numero": 1,
+      "eje": "Números y Operaciones",
+      "texto": "Representar y describir números del 0 al 10 000: • contándolos de 10 en 10, de 100 en 100, de 1 000 en 1 000 • leyéndolos y escribiéndolos • representándolos en forma concreta, pictórica y simbólica • comparándolos y ordenándolos en la recta numérica o la tabla posicional • identificando el valor posicional de los dígitos hasta la decena de mil • componiendo y descomponiendo números naturales hasta 10 000 en forma aditiva, de acuerdo a su valor posicional",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-02",
+      "nivel": "4-basico",
+      "numero": 2,
+      "eje": "Números y Operaciones",
+      "texto": "Describir y aplicar estrategias de cálculo mental para determinar las multiplicaciones hasta 10 · 10 y sus divisiones correspondientes: • conteo hacia delante y atrás • doblar y dividir por 2 • por descomposición • usar el doble del doble",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-03",
+      "nivel": "4-basico",
+      "numero": 3,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden la adición y la sustracción de números hasta 1 000: • usando estrategias personales para realizar estas operaciones • descomponiendo los números involucrados • estimando sumas y diferencias • resolviendo problemas rutinarios y no rutinarios que incluyan adiciones y sustracciones • aplicando los algoritmos en la adición de hasta cuatro sumandos y en la sustracción de hasta un sustraendo",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-04",
+      "nivel": "4-basico",
+      "numero": 4,
+      "eje": "Números y Operaciones",
+      "texto": "Fundamentar y aplicar las propiedades del 0 y del 1 para la multiplicación y la propiedad del 1 para la división.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-05",
+      "nivel": "4-basico",
+      "numero": 5,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden la multiplicación de números de tres dígitos por números de un dígito: • usando estrategias con o sin material concreto • utilizando las tablas de multiplicación • estimando productos • usando la propiedad distributiva de la multiplicación respecto de la suma • aplicando el algoritmo de la multiplicación • resolviendo problemas rutinarios",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-06",
+      "nivel": "4-basico",
+      "numero": 6,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprenden la división con dividendos de dos dígitos y divisores de un dígito: • usando estrategias para dividir, con o sin material concreto • utilizando la relación que existe entre la división y la multiplicación • estimando el cociente • aplicando la estrategia por descomposición del dividendo • aplicando el algoritmo de la división",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-07",
+      "nivel": "4-basico",
+      "numero": 7,
+      "eje": "Números y Operaciones",
+      "texto": "Resolver problemas rutinarios y no rutinarios en contextos cotidianos que incluyen dinero, seleccionando y utilizando la operación apropiada.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-08",
+      "nivel": "4-basico",
+      "numero": 8,
+      "eje": "Números y Operaciones",
+      "texto": "Demostrar que comprende las fracciones con denominadores 100, 12, 10, 8, 6, 5, 4, 3, 2: • explicando que una fracción representa la parte de un todo o de un grupo de elementos y un lugar en la recta numérica • describiendo situaciones en las cuales se puede usar fracciones • mostrando que una fracción puede tener representaciones diferentes • comparando y ordenando fracciones (por ejemplo: 1/100, 1/8, 1/5, 1/4, 1/2) con material concreto y pictórico",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-09",
+      "nivel": "4-basico",
+      "numero": 9,
+      "eje": "Números y Operaciones",
+      "texto": "Resolver adiciones y sustracciones de fracciones con igual denominador (denominadores 100, 12, 10, 8, 6, 5, 4, 3, 2) de manera concreta y pictórica en el contexto de la resolución de problemas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-10",
+      "nivel": "4-basico",
+      "numero": 10,
+      "eje": "Números y Operaciones",
+      "texto": "Identificar, escribir y representar fracciones propias y los números mixtos hasta el 5 de manera concreta, pictórica y simbólica, en el contexto de la resolución de problemas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-11",
+      "nivel": "4-basico",
+      "numero": 11,
+      "eje": "Números y Operaciones",
+      "texto": "Describir y representar decimales (décimos y centésimos): • representándolos en forma concreta, pictórica y simbólica, de manera manual y/o con software educativo • comparándolos y ordenándolos hasta la centésima",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-12",
+      "nivel": "4-basico",
+      "numero": 12,
+      "eje": "Números y Operaciones",
+      "texto": "Resolver adiciones y sustracciones de decimales, empleando el valor posicional hasta la centésima en el contexto de la resolución de problemas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-13",
+      "nivel": "4-basico",
+      "numero": 13,
+      "eje": "Patrones y Álgebra",
+      "texto": "Identificar y describir patrones numéricos en tablas que involucren una operación, de manera manual y/o usando software educativo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-14",
+      "nivel": "4-basico",
+      "numero": 14,
+      "eje": "Patrones y Álgebra",
+      "texto": "Resolver ecuaciones e inecuaciones de un paso que involucren adiciones y sustracciones, comprobando los resultados en forma pictórica y simbólica del 0 al 100 y aplicando las relaciones inversas entre la adición y la sustracción.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-15",
+      "nivel": "4-basico",
+      "numero": 15,
+      "eje": "Geometría",
+      "texto": "Describir la localización absoluta de un objeto en un mapa simple con coordenadas informales (por ejemplo: con letras y números) y la localización relativa con relación a otros objetos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-16",
+      "nivel": "4-basico",
+      "numero": 16,
+      "eje": "Geometría",
+      "texto": "Determinar las vistas de figuras 3D desde el frente, desde el lado y desde arriba.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-17",
+      "nivel": "4-basico",
+      "numero": 17,
+      "eje": "Geometría",
+      "texto": "Demostrar que comprenden una línea de simetría: • identificando figuras simétricas 2D • creando figuras simétricas 2D • dibujando una o más líneas de simetría en figuras 2D • usando software geométrico",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-18",
+      "nivel": "4-basico",
+      "numero": 18,
+      "eje": "Geometría",
+      "texto": "Trasladar, rotar y reflejar figuras 2D.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-19",
+      "nivel": "4-basico",
+      "numero": 19,
+      "eje": "Geometría",
+      "texto": "Construir ángulos con el transportador y compararlos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-20",
+      "nivel": "4-basico",
+      "numero": 20,
+      "eje": "Medición",
+      "texto": "Leer y registrar diversas mediciones del tiempo en relojes análogos y digitales, usando los conceptos A.M., P.M. y 24 horas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-21",
+      "nivel": "4-basico",
+      "numero": 21,
+      "eje": "Medición",
+      "texto": "Realizar conversiones entre unidades de tiempo en el contexto de la resolución de problemas: el número de segundos en un minuto, el número de minutos en una hora, el número de días en un mes y el número de meses en un año.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-22",
+      "nivel": "4-basico",
+      "numero": 22,
+      "eje": "Medición",
+      "texto": "Medir longitudes con unidades estandarizadas (m, cm) y realizar transformaciones entre estas unidades (m a cm y viceversa) en el contexto de la resolución de problemas.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-23",
+      "nivel": "4-basico",
+      "numero": 23,
+      "eje": "Medición",
+      "texto": "Demostrar que comprenden el concepto de área de un rectángulo y de un cuadrado: • reconociendo que el área de una superficie se mide en unidades cuadradas • seleccionando y justificando la elección de la unidad estandarizada (cm2 y m2) • determinando y registrando el área en cm2 y m2 en contextos cercanos • construyendo diferentes rectángulos para un área dada (cm2 y m2), para mostrar que distintos rectángulos pueden tener la misma área • usando software geométrico",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-24",
+      "nivel": "4-basico",
+      "numero": 24,
+      "eje": "Medición",
+      "texto": "Demostrar que comprenden el concepto de volumen de un cuerpo: • seleccionando una unidad no estandarizada para medir el volumen de un cuerpo • reconociendo que el volumen se mide en unidades de cubo • midiendo y registrando el volumen en unidades de cubo • usando software geométrico",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-25",
+      "nivel": "4-basico",
+      "numero": 25,
+      "eje": "Datos y Probabilidades",
+      "texto": "Realizar encuestas, analizar los datos y comparar con los resultados de muestras aleatorias, usando tablas y gráficos.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-26",
+      "nivel": "4-basico",
+      "numero": 26,
+      "eje": "Datos y Probabilidades",
+      "texto": "Realizar experimentos aleatorios lúdicos y cotidianos, y tabular y representar mediante gráficos de manera manual y/o con software educativo.",
+      "indicadores": []
+    },
+    {
+      "codigo": "MA04-OA-27",
+      "nivel": "4-basico",
+      "numero": 27,
+      "eje": "Datos y Probabilidades",
+      "texto": "Leer e interpretar pictogramas y gráficos de barra simple con escala y comunicar sus conclusiones.",
+      "indicadores": []
+    }
+  ]
+}
