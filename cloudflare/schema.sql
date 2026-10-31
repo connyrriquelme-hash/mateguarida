@@ -32,8 +32,13 @@ CREATE TABLE IF NOT EXISTS curso (
   nivel      TEXT NOT NULL CHECK (nivel IN ('NT1', 'NT2', '1-basico', '2-basico', '3-basico', '4-basico')),
   -- codigo que escriben los estudiantes una vez por tablet (como el CLASS_CODE
   -- de Lectoguarida, pero por curso en vez de global). No es un secreto fuerte:
-  -- es friccion para que un extrano no entre, no una contrasena.
+  -- es friccion para que un extrano no entre, no una contrasena. Por eso se
+  -- genera solo (cloudflare/codigos.mjs: PALABRA-NNL, ej. VERDE-47K) y se
+  -- rechazan los cortos o comunes incluso si se edita a mano (la validacion
+  -- real vive en JS; este CHECK es solo un piso minimo).
   codigo     TEXT NOT NULL UNIQUE CHECK (length(codigo) BETWEEN 4 AND 24),
+  -- Cuantas mesas tiene el curso (para el selector numerico de estudiante.mesa).
+  cantidad_mesas INTEGER NOT NULL DEFAULT 8 CHECK (cantidad_mesas BETWEEN 1 AND 60),
   activo     INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
@@ -45,8 +50,10 @@ CREATE TABLE IF NOT EXISTS estudiante (
   nombre           TEXT NOT NULL CHECK (length(nombre) BETWEEN 1 AND 60),
   -- Solo la inicial, nunca el apellido completo (dato minimo).
   inicial_apellido TEXT CHECK (inicial_apellido IS NULL OR length(inicial_apellido) <= 4),
-  -- Agrupacion libre que define la profesora (mesa, grupo, fila...).
-  mesa             TEXT CHECK (mesa IS NULL OR length(mesa) <= 30),
+  -- Numero de mesa (1..curso.cantidad_mesas; el rango exacto se valida en JS
+  -- porque SQLite no puede comparar contra la columna de otra tabla en un
+  -- CHECK). Selector numerico en el panel, no texto libre.
+  mesa             INTEGER CHECK (mesa IS NULL OR mesa >= 1),
   activo           INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
   created_at       TEXT NOT NULL,
   updated_at       TEXT NOT NULL
@@ -78,6 +85,17 @@ CREATE TABLE IF NOT EXISTS sesion_estudiante (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sesion_estudiante_alumno ON sesion_estudiante(estudiante_id, expires_at);
+
+-- Limite de intentos de /api/entrada por IP (cloudflare/limitador.mjs): 5
+-- codigos incorrectos seguidos desde la misma IP la bloquean unos minutos.
+-- Protege contra adivinar el codigo de un curso a fuerza bruta. Una sola fila
+-- por IP; se borra sola al acertar o al vencer el bloqueo (revisarBloqueo).
+CREATE TABLE IF NOT EXISTS intento_login_ip (
+  ip              TEXT PRIMARY KEY,
+  fallos          INTEGER NOT NULL DEFAULT 0,
+  bloqueado_hasta TEXT,
+  actualizado_en  TEXT NOT NULL
+);
 
 -- ---------------------------------------------------------------------------
 -- Avance (etapa 4 en adelante: el primer minijuego ya escribe aqui)

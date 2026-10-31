@@ -44,10 +44,19 @@ Dominio: **mateguarida.com** (comprado, en la cuenta de Cloudflare de Conny).
   de Access (Zero Trust → Access → Applications → la app → Overview) y van
   en `wrangler.jsonc` → `vars` (no son secretos: ambos viajan dentro del
   propio JWT).
-- **Estudiantes se agrupan por mesa** (campo libre en `estudiante.mesa`); el
-  avance se puede ver por estudiante, por mesa y por OA.
+- **Estudiantes se agrupan por mesa**: número de mesa (1..`curso.cantidad_mesas`,
+  por defecto 8), selector en el panel, no texto libre. El avance se puede
+  ver por estudiante, por mesa y por OA.
 - **Carga de curso por lista pegada**: un nombre por línea; la inicial del
-  apellido se escribe al final de la línea ("Ana R."), se detecta sola.
+  apellido se escribe al final de la línea ("Ana R."), se detecta sola;
+  funciona también con nombres compuestos ("María José R." → nombre "María
+  José" + inicial "R").
+- **Código de curso generado solo** (`cloudflare/codigos.mjs`): formato
+  PALABRA-NNL (ej. VERDE-47K), nunca corto ni de una lista de códigos
+  comunes/débiles, incluso si la profesora lo edita a mano. Protegido además
+  por límite de intentos por IP en `/api/entrada`
+  (`cloudflare/limitador.mjs`): 5 códigos incorrectos seguidos desde la
+  misma IP bloquean esa IP 5 minutos.
 
 ## Dominio y despliegue
 

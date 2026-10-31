@@ -9,7 +9,13 @@
  * mostrar aun -- el panel debe mostrar un estado vacio, no un error.
  */
 
+import { generarCodigo, validarCodigo } from "./codigos.mjs";
+
 const NIVELES_VALIDOS = ["NT1", "NT2", "1-basico", "2-basico", "3-basico", "4-basico"];
+const CANTIDAD_MESAS_MIN = 1;
+const CANTIDAD_MESAS_MAX = 60;
+const CANTIDAD_MESAS_DEFECTO = 8;
+const INTENTOS_GENERAR_CODIGO = 10;
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -54,9 +60,27 @@ function filaEstudiante(e) {
     id: e.id,
     nombre: e.nombre,
     inicialApellido: e.inicial_apellido || null,
-    mesa: e.mesa || null,
+    mesa: e.mesa === null || e.mesa === undefined ? null : Number(e.mesa),
     activo: Boolean(e.activo)
   };
+}
+
+function validarCantidadMesas(valor) {
+  const n = Number(valor);
+  if (!Number.isInteger(n) || n < CANTIDAD_MESAS_MIN || n > CANTIDAD_MESAS_MAX) {
+    return { error: `La cantidad de mesas debe ser un número entero entre ${CANTIDAD_MESAS_MIN} y ${CANTIDAD_MESAS_MAX}.` };
+  }
+  return { valor: n };
+}
+
+/** mesa puede venir null/undefined (sin mesa), o un numero 1..cantidadMesas. */
+function validarMesa(valorCrudo, cantidadMesas) {
+  if (valorCrudo === null || valorCrudo === undefined || valorCrudo === "") return { valor: null };
+  const n = Number(valorCrudo);
+  if (!Number.isInteger(n) || n < 1 || n > cantidadMesas) {
+    return { error: `La mesa debe ser un número entre 1 y ${cantidadMesas}.` };
+  }
+  return { valor: n };
 }
 
 /* ------------------------------- cursos --------------------------------- */
@@ -64,47 +88,91 @@ function filaEstudiante(e) {
 /** GET /api/docente/cursos */
 export async function listarCursos(env) {
   const { results } = await env.DB.prepare(
-    "SELECT c.id, c.nombre, c.nivel, c.codigo, c.activo, " +
+    "SELECT c.id, c.nombre, c.nivel, c.codigo, c.cantidad_mesas, c.activo, " +
     "  (SELECT COUNT(*) FROM estudiante e WHERE e.curso_id = c.id AND e.activo = 1) AS total_estudiantes " +
     "FROM curso c ORDER BY c.nombre COLLATE NOCASE"
   ).all();
   return json({
     cursos: (results || []).map((c) => ({
-      id: c.id, nombre: c.nombre, nivel: c.nivel, codigo: c.codigo,
+      id: c.id, nombre: c.nombre, nivel: c.nivel, codigo: c.codigo, cantidadMesas: c.cantidad_mesas,
       activo: Boolean(c.activo), totalEstudiantes: c.total_estudiantes
     }))
   });
 }
 
-/** POST /api/docente/cursos  { nombre, nivel, codigo } */
+/**
+ * Intenta insertar un curso con un codigo generado; si choca con uno que ya
+ * existe (muy poco probable, pero posible), genera otro y reintenta.
+ */
+async function insertarCursoConCodigoGenerado(env, { id, nombre, nivel, cantidadMesas, t }) {
+  for (let intento = 0; intento < INTENTOS_GENERAR_CODIGO; intento += 1) {
+    const codigo = generarCodigo();
+    try {
+      await env.DB.prepare(
+        "INSERT INTO curso (id, nombre, nivel, codigo, cantidad_mesas, activo, created_at, updated_at) " +
+        "VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?6)"
+      ).bind(id, nombre, nivel, codigo, cantidadMesas, t).run();
+      return codigo;
+    } catch (error) {
+      if (!String(error.message || "").includes("UNIQUE")) throw error;
+      // codigo ya usado por otro curso: se intenta con uno nuevo.
+    }
+  }
+  throw new Error("No se pudo generar un código de curso único.");
+}
+
+/** POST /api/docente/cursos  { nombre, nivel, codigo?, cantidadMesas? } */
 export async function crearCurso(request, env) {
   const body = await leerJson(request);
   const nombre = String(body.nombre || "").trim();
   const nivel = String(body.nivel || "").trim();
-  const codigo = String(body.codigo || "").trim().toUpperCase();
 
   if (!nombre || nombre.length > 60) return json({ error: "El nombre del curso debe tener entre 1 y 60 caracteres." }, 400);
   if (!NIVELES_VALIDOS.includes(nivel)) return json({ error: "Nivel invalido." }, 400);
-  if (codigo.length < 4 || codigo.length > 24) return json({ error: "El codigo debe tener entre 4 y 24 caracteres." }, 400);
+
+  const cantidadMesasResultado = validarCantidadMesas(body.cantidadMesas ?? CANTIDAD_MESAS_DEFECTO);
+  if (cantidadMesasResultado.error) return json({ error: cantidadMesasResultado.error }, 400);
+  const cantidadMesas = cantidadMesasResultado.valor;
 
   const id = crypto.randomUUID();
   const t = ahora();
+
+  // Se puede pedir un codigo propio, pero se valida igual que uno generado
+  // (sin excepciones): nada corto ni facil de adivinar.
+  const codigoPedido = body.codigo !== undefined && body.codigo !== null && String(body.codigo).trim() !== ""
+    ? String(body.codigo).trim().toUpperCase()
+    : null;
+
+  let codigoFinal;
   try {
-    await env.DB.prepare(
-      "INSERT INTO curso (id, nombre, nivel, codigo, activo, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, 1, ?5, ?5)"
-    ).bind(id, nombre, nivel, codigo, t).run();
+    if (codigoPedido) {
+      const errorCodigo = validarCodigo(codigoPedido);
+      if (errorCodigo) return json({ error: errorCodigo }, 400);
+      await env.DB.prepare(
+        "INSERT INTO curso (id, nombre, nivel, codigo, cantidad_mesas, activo, created_at, updated_at) " +
+        "VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?6)"
+      ).bind(id, nombre, nivel, codigoPedido, cantidadMesas, t).run();
+      codigoFinal = codigoPedido;
+    } else {
+      codigoFinal = await insertarCursoConCodigoGenerado(env, { id, nombre, nivel, cantidadMesas, t });
+    }
   } catch (error) {
     if (String(error.message || "").includes("UNIQUE")) {
       return json({ error: "Ya existe un curso con ese codigo." }, 409);
     }
     throw error;
   }
-  return json({ curso: { id, nombre, nivel, codigo, activo: true, totalEstudiantes: 0 } }, 201);
+
+  return json({
+    curso: { id, nombre, nivel, codigo: codigoFinal, cantidadMesas, activo: true, totalEstudiantes: 0 }
+  }, 201);
 }
 
 /** GET /api/docente/cursos/:id */
 export async function obtenerCurso(env, cursoId) {
-  const curso = await env.DB.prepare("SELECT id, nombre, nivel, codigo, activo FROM curso WHERE id = ?1").bind(cursoId).first();
+  const curso = await env.DB.prepare(
+    "SELECT id, nombre, nivel, codigo, cantidad_mesas, activo FROM curso WHERE id = ?1"
+  ).bind(cursoId).first();
   if (!curso) return json({ error: "Curso no encontrado." }, 404);
 
   const { results: estudiantes } = await env.DB.prepare(
@@ -112,12 +180,15 @@ export async function obtenerCurso(env, cursoId) {
   ).bind(cursoId).all();
 
   return json({
-    curso: { id: curso.id, nombre: curso.nombre, nivel: curso.nivel, codigo: curso.codigo, activo: Boolean(curso.activo) },
+    curso: {
+      id: curso.id, nombre: curso.nombre, nivel: curso.nivel, codigo: curso.codigo,
+      cantidadMesas: curso.cantidad_mesas, activo: Boolean(curso.activo)
+    },
     estudiantes: (estudiantes || []).map(filaEstudiante)
   });
 }
 
-/** PATCH /api/docente/cursos/:id  { nombre?, nivel?, codigo?, activo? } */
+/** PATCH /api/docente/cursos/:id  { nombre?, nivel?, codigo?, cantidadMesas?, activo? } */
 export async function actualizarCurso(request, env, cursoId) {
   const body = await leerJson(request);
   const existente = await env.DB.prepare("SELECT id FROM curso WHERE id = ?1").bind(cursoId).first();
@@ -136,8 +207,14 @@ export async function actualizarCurso(request, env, cursoId) {
   }
   if (body.codigo !== undefined) {
     const codigo = String(body.codigo).trim().toUpperCase();
-    if (codigo.length < 4 || codigo.length > 24) return json({ error: "Codigo invalido." }, 400);
+    const errorCodigo = validarCodigo(codigo);
+    if (errorCodigo) return json({ error: errorCodigo }, 400);
     campos.push("codigo = ?"); valores.push(codigo);
+  }
+  if (body.cantidadMesas !== undefined) {
+    const resultado = validarCantidadMesas(body.cantidadMesas);
+    if (resultado.error) return json({ error: resultado.error }, 400);
+    campos.push("cantidad_mesas = ?"); valores.push(resultado.valor);
   }
   if (body.activo !== undefined) {
     campos.push("activo = ?"); valores.push(body.activo ? 1 : 0);
@@ -152,6 +229,23 @@ export async function actualizarCurso(request, env, cursoId) {
     throw error;
   }
   return obtenerCurso(env, cursoId);
+}
+
+/** POST /api/docente/cursos/:id/regenerar-codigo -- por si el codigo se filtro. */
+export async function regenerarCodigo(env, cursoId) {
+  const existente = await env.DB.prepare("SELECT id FROM curso WHERE id = ?1").bind(cursoId).first();
+  if (!existente) return json({ error: "Curso no encontrado." }, 404);
+
+  for (let intento = 0; intento < INTENTOS_GENERAR_CODIGO; intento += 1) {
+    const codigo = generarCodigo();
+    try {
+      await env.DB.prepare("UPDATE curso SET codigo = ?1, updated_at = ?2 WHERE id = ?3").bind(codigo, ahora(), cursoId).run();
+      return obtenerCurso(env, cursoId);
+    } catch (error) {
+      if (!String(error.message || "").includes("UNIQUE")) throw error;
+    }
+  }
+  return json({ error: "No se pudo generar un código de curso único." }, 500);
 }
 
 /** DELETE /api/docente/cursos/:id -- borra el curso y todo lo suyo. */
@@ -181,21 +275,29 @@ export async function eliminarCurso(env, cursoId) {
 
 /**
  * POST /api/docente/cursos/:id/estudiantes
- *   { pegado: "Ana R.\nBruno\nCaro M.", mesa?: "Mesa 1" }  -- carga masiva
- *   { nombre: "Ana", inicialApellido: "R", mesa: "Mesa 1" } -- uno solo
+ *   { pegado: "Ana R.\nBruno\nCaro M.", mesa?: 3 }  -- carga masiva
+ *   { nombre: "Ana", inicialApellido: "R", mesa: 3 } -- uno solo
+ * `mesa` es un numero (1..curso.cantidadMesas), no texto libre.
  */
 export async function agregarEstudiantes(request, env, cursoId) {
-  const curso = await env.DB.prepare("SELECT id FROM curso WHERE id = ?1").bind(cursoId).first();
+  const curso = await env.DB.prepare("SELECT id, cantidad_mesas FROM curso WHERE id = ?1").bind(cursoId).first();
   if (!curso) return json({ error: "Curso no encontrado." }, 404);
 
   const body = await leerJson(request);
+  let mesaComun = null;
+  if (body.mesa !== undefined) {
+    const r = validarMesa(body.mesa, curso.cantidad_mesas);
+    if (r.error) return json({ error: r.error }, 400);
+    mesaComun = r.valor;
+  }
+
   let candidatos;
   if (typeof body.pegado === "string" && body.pegado.trim()) {
-    candidatos = parsearListado(body.pegado).map((c) => ({ ...c, mesa: body.mesa || null }));
+    candidatos = parsearListado(body.pegado).map((c) => ({ ...c, mesa: mesaComun }));
   } else if (body.nombre) {
     const nombre = String(body.nombre).trim();
     if (!nombre) return json({ error: "Falta el nombre." }, 400);
-    candidatos = [{ nombre, inicialApellido: body.inicialApellido || null, mesa: body.mesa || null }];
+    candidatos = [{ nombre, inicialApellido: body.inicialApellido || null, mesa: mesaComun }];
   } else {
     return json({ error: "Falta 'pegado' o 'nombre'." }, 400);
   }
@@ -219,7 +321,9 @@ export async function agregarEstudiantes(request, env, cursoId) {
 /** PATCH /api/docente/estudiantes/:id  { nombre?, inicialApellido?, mesa?, activo? } */
 export async function actualizarEstudiante(request, env, estudianteId) {
   const body = await leerJson(request);
-  const existente = await env.DB.prepare("SELECT id FROM estudiante WHERE id = ?1").bind(estudianteId).first();
+  const existente = await env.DB.prepare(
+    "SELECT e.id, c.cantidad_mesas FROM estudiante e JOIN curso c ON c.id = e.curso_id WHERE e.id = ?1"
+  ).bind(estudianteId).first();
   if (!existente) return json({ error: "Estudiante no encontrado." }, 404);
 
   const campos = [];
@@ -234,8 +338,9 @@ export async function actualizarEstudiante(request, env, estudianteId) {
     campos.push("inicial_apellido = ?"); valores.push(inicial);
   }
   if (body.mesa !== undefined) {
-    const mesa = body.mesa ? String(body.mesa).trim().slice(0, 30) : null;
-    campos.push("mesa = ?"); valores.push(mesa);
+    const r = validarMesa(body.mesa, existente.cantidad_mesas);
+    if (r.error) return json({ error: r.error }, 400);
+    campos.push("mesa = ?"); valores.push(r.valor);
   }
   if (body.activo !== undefined) {
     campos.push("activo = ?"); valores.push(body.activo ? 1 : 0);

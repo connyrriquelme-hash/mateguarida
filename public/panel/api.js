@@ -35,6 +35,7 @@ export const api = {
   obtenerCurso: (id) => llamar(`/api/docente/cursos/${encodeURIComponent(id)}`),
   actualizarCurso: (id, cambios) => llamar(`/api/docente/cursos/${encodeURIComponent(id)}`, { metodo: 'PATCH', cuerpo: cambios }),
   eliminarCurso: (id) => llamar(`/api/docente/cursos/${encodeURIComponent(id)}`, { metodo: 'DELETE' }),
+  regenerarCodigo: (id) => llamar(`/api/docente/cursos/${encodeURIComponent(id)}/regenerar-codigo`, { metodo: 'POST' }),
 
   agregarEstudiantes: (cursoId, datos) =>
     llamar(`/api/docente/cursos/${encodeURIComponent(cursoId)}/estudiantes`, { metodo: 'POST', cuerpo: datos }),

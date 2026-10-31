@@ -13,7 +13,7 @@
 import { manejarEntrada, manejarEntrarEstudiante } from "./curso.mjs";
 import { obtenerDocente, respuestaNoAutorizado } from "./acceso.mjs";
 import {
-  listarCursos, crearCurso, obtenerCurso, actualizarCurso, eliminarCurso,
+  listarCursos, crearCurso, obtenerCurso, actualizarCurso, eliminarCurso, regenerarCodigo,
   agregarEstudiantes, actualizarEstudiante, eliminarEstudiante, obtenerAvance
 } from "./docente.mjs";
 
@@ -45,6 +45,11 @@ async function manejarDocente(request, env, pathname) {
   const matchEstudiantesCurso = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/estudiantes$/);
   if (matchEstudiantesCurso && method === "POST") {
     return agregarEstudiantes(request, env, decodeURIComponent(matchEstudiantesCurso[1]));
+  }
+
+  const matchRegenerarCodigo = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/regenerar-codigo$/);
+  if (matchRegenerarCodigo && method === "POST") {
+    return regenerarCodigo(env, decodeURIComponent(matchRegenerarCodigo[1]));
   }
 
   const matchAvance = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/avance$/);

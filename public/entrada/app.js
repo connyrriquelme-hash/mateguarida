@@ -80,9 +80,13 @@ export function iniciar(raiz, deps = {}) {
         pantallaNombres();
       } catch (error) {
         boton.disabled = false;
-        aviso.textContent = error instanceof ErrorApi && error.estado === 401
-          ? 'Ese código no es correcto. Revísalo y prueba otra vez.'
-          : 'No pudimos conectarnos. Revisa el internet e inténtalo de nuevo.';
+        if (error instanceof ErrorApi && error.estado === 401) {
+          aviso.textContent = 'Ese código no es correcto. Revísalo y prueba otra vez.';
+        } else if (error instanceof ErrorApi && error.estado === 429) {
+          aviso.textContent = error.message || 'Demasiados intentos. Espera unos minutos y vuelve a intentar.';
+        } else {
+          aviso.textContent = 'No pudimos conectarnos. Revisa el internet e inténtalo de nuevo.';
+        }
         campo.focus();
       }
     });
@@ -158,6 +162,8 @@ export function iniciar(raiz, deps = {}) {
       if (error instanceof ErrorApi && error.estado === 401) {
         api.olvidarCodigo();
         pantallaCodigo('El código ya no sirve. Pídele a tu profesora el nuevo.');
+      } else if (error instanceof ErrorApi && error.estado === 429) {
+        pantallaError(error.message || 'Demasiados intentos. Espera unos minutos y vuelve a intentar.', arrancar);
       } else {
         pantallaError('No pudimos conectarnos. Revisa el internet e inténtalo de nuevo.', arrancar);
       }

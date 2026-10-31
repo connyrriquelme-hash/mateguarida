@@ -2,15 +2,18 @@
  * curso.mjs
  * API de entrada de los estudiantes: codigo de curso -> lista de nombres ->
  * tocar su nombre -> jugar. Sin PIN (se quito en la etapa 3: un nino
- * peleando con un PIN antes de jugar era friccion que no aportaba nada,
- * ver CLAUDE.md).
+ * peleando con un PIN antes de jugar era friccion que no aportaba nada).
  *
  * El "codigo" vive en la tabla curso (columna codigo), no como secreto del
- * Worker, porque Mateguarida puede tener mas de un curso a la vez.
+ * Worker, porque Mateguarida puede tener mas de un curso a la vez. Se genera
+ * solo (cloudflare/codigos.mjs) y esta protegido de fuerza bruta por IP
+ * (cloudflare/limitador.mjs: 5 intentos fallidos -> bloqueo de unos minutos).
  *
  * Crear cursos/estudiantes es cosa del panel docente (cloudflare/docente.mjs,
  * protegido con Cloudflare Access); aqui solo se entra a los que ya existen.
  */
+
+import { obtenerIp, revisarBloqueo, registrarFallo, limpiarFallos } from "./limitador.mjs";
 
 const DURACION_SESION_HORAS = 12;
 
@@ -27,6 +30,12 @@ function normalizarCodigo(valor) {
 
 /** POST /api/entrada  { codigo } -> { curso, estudiantes } */
 export async function manejarEntrada(request, env) {
+  const ip = obtenerIp(request);
+  const bloqueo = await revisarBloqueo(env, ip);
+  if (bloqueo.bloqueada) {
+    return json({ error: `Demasiados intentos. Espera ${bloqueo.minutosRestantes} minuto(s) y vuelve a intentar.` }, 429);
+  }
+
   let body;
   try {
     body = await request.json();
@@ -41,7 +50,11 @@ export async function manejarEntrada(request, env) {
     "SELECT id, nombre, nivel FROM curso WHERE codigo = ?1 AND activo = 1"
   ).bind(codigo).first();
 
-  if (!curso) return json({ error: "Codigo incorrecto." }, 401);
+  if (!curso) {
+    await registrarFallo(env, ip);
+    return json({ error: "Codigo incorrecto." }, 401);
+  }
+  await limpiarFallos(env, ip);
 
   const { results: estudiantes } = await env.DB.prepare(
     "SELECT id, nombre, inicial_apellido " +

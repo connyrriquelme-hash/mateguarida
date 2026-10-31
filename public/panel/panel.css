@@ -52,6 +52,7 @@
   padding: 1rem;
 }
 .panel-formulario label { font-weight: 700; font-size: 0.9rem; }
+.panel-ayuda { font-size: 0.85rem; color: #6B7A85; margin: 0; }
 .panel-formulario input, .panel-formulario select, .panel-formulario textarea {
   font-size: 1rem;
   padding: 0.6rem 0.75rem;
