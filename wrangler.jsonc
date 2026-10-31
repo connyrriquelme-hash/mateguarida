@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mateguarida-conny",
+  "main": "cloudflare/worker.mjs",
+  "compatibility_date": "2026-10-30",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "mateguarida.com", "custom_domain": true },
+    { "pattern": "www.mateguarida.com", "custom_domain": true }
+  ],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mateguarida-db",
+      // PENDIENTE: reemplazar con el id real que entrega
+      //   npx wrangler d1 create mateguarida-db
+      // una vez que Conny haya iniciado sesion (npx wrangler login). Con
+      // este valor de relleno, "wrangler dev" y "wrangler deploy" fallan
+      // a proposito en vez de apuntar a una base equivocada.
+      "database_id": "PENDIENTE-crear-con-wrangler-d1-create"
+    }
+  ]
+}

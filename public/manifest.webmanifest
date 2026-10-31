@@ -1,0 +1,13 @@
+{
+  "name": "Mateguarida",
+  "short_name": "Mateguarida",
+  "description": "Juegos para aprender matemática, de NT1 a 4º básico.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBFBF6",
+  "theme_color": "#1B6B93",
+  "lang": "es-CL",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
