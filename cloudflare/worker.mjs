@@ -25,7 +25,7 @@ function json(data, status = 200) {
 }
 
 async function manejarDocente(request, env, pathname) {
-  if (!obtenerDocente(request, env)) return respuestaNoAutorizado();
+  if (!(await obtenerDocente(request, env))) return respuestaNoAutorizado();
 
   const { method } = request;
 
@@ -86,7 +86,7 @@ export default {
 
     // Segunda capa tambien para los archivos estaticos del panel: si Access
     // fallara, esto igual corta el paso antes de servir /panel/*.
-    if (pathname.startsWith("/panel") && !obtenerDocente(request, env)) {
+    if (pathname.startsWith("/panel") && !(await obtenerDocente(request, env))) {
       return respuestaNoAutorizado();
     }
 

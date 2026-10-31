@@ -36,8 +36,14 @@ Dominio: **mateguarida.com** (comprado, en la cuenta de Cloudflare de Conny).
   fecha de nacimiento ni otro dato personal — ni en D1 ni en ningún juego.
 - **Panel docente (`/panel`, `/api/docente/*`) protegido con Cloudflare
   Access** (verificación por correo a connyrriquelme@gmail.com), no con PIN
-  propio. El Worker valida una segunda vez la cabecera que pone Access
-  (`cloudflare/acceso.mjs`), como defensa en profundidad.
+  propio. `cloudflare/acceso.mjs` valida el JWT de Access de verdad (firma
+  RS256 contra `https://<ACCESS_TEAM_DOMAIN>/cdn-cgi/access/certs`, `iss`,
+  `aud` contra `ACCESS_AUD_TAG`, `exp` y el correo) como defensa en
+  profundidad — no se conforma con leer una cabecera sin verificar.
+  `ACCESS_TEAM_DOMAIN` y `ACCESS_AUD_TAG` son los dos datos de la aplicación
+  de Access (Zero Trust → Access → Applications → la app → Overview) y van
+  en `wrangler.jsonc` → `vars` (no son secretos: ambos viajan dentro del
+  propio JWT).
 - **Estudiantes se agrupan por mesa** (campo libre en `estudiante.mesa`); el
   avance se puede ver por estudiante, por mesa y por OA.
 - **Carga de curso por lista pegada**: un nombre por línea; la inicial del
