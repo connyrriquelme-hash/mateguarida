@@ -21,12 +21,28 @@
       "database_id": "d8adeadf-8362-4f03-805c-f59ef8b7fd9d"
     }
   ],
+  "r2_buckets": [
+    {
+      // Cache de audio generado por Azure Speech (cloudflare/voz.mjs): una
+      // vez sintetizada una frase, se guarda aqui con una clave segun su
+      // texto y no se le vuelve a pedir a Azure. Nunca guarda nombres de
+      // estudiantes, solo el texto fijo de preguntas/apoyos (sin datos
+      // personales).
+      "binding": "AUDIO",
+      "bucket_name": "mateguarida-audio"
+    }
+  ],
   "vars": {
     // Datos publicos de la aplicacion de Cloudflare Access "Mateguarida —
     // Panel docente" (Zero Trust -> Access -> Applications -> Overview). No
     // son secretos: ambos van dentro del propio JWT. cloudflare/acceso.mjs
     // los usa para verificar la firma, el emisor y la audiencia del JWT.
     "ACCESS_TEAM_DOMAIN": "misty-cell-8e47.cloudflareaccess.com",
-    "ACCESS_AUD_TAG": "da770e01d3736f809476a4d9c61a33a8dc5739dc5f124d251493b75b8bc9ea72"
+    "ACCESS_AUD_TAG": "da770e01d3736f809476a4d9c61a33a8dc5739dc5f124d251493b75b8bc9ea72",
+    // Region del recurso Azure Speech (ver cloudflare/voz.mjs). No es
+    // secreto, solo dice a que endpoint regional de Azure llamar; la clave
+    // de verdad (AZURE_SPEECH_KEY) es un secreto del Worker, nunca vive aqui.
+    "AZURE_SPEECH_REGION": "brazilsouth",
+    "AZURE_SPEECH_VOZ": "es-CL-CatalinaNeural"
   }
 }

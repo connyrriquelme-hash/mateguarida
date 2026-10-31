@@ -31,6 +31,7 @@
 import { h } from '../../entrada/dom.js';
 import { gatoSVG } from '../../entrada/mascota.js';
 import { CLAVE_TOKEN } from '../../entrada/api.js';
+import { decir, hayVozEspanol } from '../../entrada/voz.js';
 
 const TOTAL_SALTOS = 9;
 const SALTOS_PARA_SUBIR = 2;
@@ -121,39 +122,6 @@ function generarSecuenciaDeSaltos() {
   return mezclar([...PASOS, ...PASOS, ...PASOS]);
 }
 
-/* -------------------------------- audio ---------------------------------- */
-
-/** true si el navegador tiene al menos una voz en español cargada. */
-function hayVozEspanol() {
-  try {
-    if (!('speechSynthesis' in window)) return false;
-    const voces = window.speechSynthesis.getVoices();
-    return voces.some((v) => v.lang && v.lang.toLowerCase().startsWith('es'));
-  } catch {
-    return false;
-  }
-}
-
-// Muchos navegadores cargan la lista de voces de forma asincrona: la
-// primera llamada a getVoices() puede venir vacia aunque si haya voz en
-// español. Se pide una vez al cargar el modulo para "despertarla"; de ahi
-// en adelante hayVozEspanol() ya ve la lista real.
-if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.addEventListener?.('voiceschanged', () => window.speechSynthesis.getVoices());
-}
-
-function decir(texto) {
-  try {
-    if (!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance(texto);
-    u.lang = 'es-CL';
-    u.rate = 0.95;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  } catch { /* sin voz disponible: el juego sigue siendo jugable en silencio */ }
-}
-
 /* --------------------------------- juego ---------------------------------- */
 
 export function iniciarJuego(raiz, deps = {}) {
@@ -219,8 +187,8 @@ export function iniciarJuego(raiz, deps = {}) {
 
   function textoPregunta(salto) {
     return salto.direccion === 'adelante'
-      ? `¿A qué número llega Guarida desde ${salto.anterior}?`
-      : `Guarida salta hacia atrás desde ${salto.anterior}. ¿A qué número llega?`;
+      ? `Desde el ${salto.anterior}, ¿a qué número salta Guarida?`
+      : `Ahora para atrás, desde el ${salto.anterior}. ¿Dónde cae?`;
   }
 
   function pintarSalto(salto, progreso) {
@@ -246,12 +214,12 @@ export function iniciarJuego(raiz, deps = {}) {
       h(doc, 'p', { class: 'escena-etiqueta', texto: `${ctx.escena} · de ${salto.tipoConteo} en ${salto.tipoConteo}` }),
       calle,
       h(doc, 'p', { class: 'texto', texto: textoPregunta(salto) }),
-      barraDeVoz(() => decir(textoPregunta(salto))),
+      barraDeVoz(() => decir(textoPregunta(salto), { token: obtenerToken() })),
       avisoAviso,
       h(doc, 'div', { class: 'opciones' }, botonesOpciones),
       h(doc, 'p', { class: 'progreso', texto: `Salto ${salto.numero} de ${TOTAL_SALTOS}` })));
 
-    decir(textoPregunta(salto));
+    decir(textoPregunta(salto), { token: obtenerToken() });
   }
 
   function mostrarApoyo(salto, progreso, despues) {
@@ -270,10 +238,10 @@ export function iniciarJuego(raiz, deps = {}) {
       h(doc, 'p', { class: 'texto', texto: `Desde ${salto.anterior}, cada grupo de ${ctx.nombrePlural} suma ${salto.tipoConteo}.` }),
       h(doc, 'div', { class: 'grupos-apoyo' }, filas),
       h(doc, 'p', { class: 'texto texto--grande numero-grande', texto: `${salto.anterior} ${salto.direccion === 'adelante' ? '+' : '−'} ${salto.tipoConteo} = ${salto.correcto}` }),
-      barraDeVoz(() => decir(texto)),
+      barraDeVoz(() => decir(texto, { token: obtenerToken() })),
       h(doc, 'button', { class: 'boton', type: 'button', texto: 'Intentar de nuevo', onclick: despues })));
 
-    decir(texto);
+    decir(texto, { token: obtenerToken() });
     progreso.apoyoMostrado = true;
   }
 
@@ -281,7 +249,7 @@ export function iniciarJuego(raiz, deps = {}) {
     if (opcion.tipoError === null) {
       // acierto
       const primeraVez = progreso.intentos === 0;
-      decir('¡Muy bien!');
+      decir('¡Muy bien!', { clave: 'muy-bien' });
       estado.resultados.push({
         // variante: contrato generico de D1 (tabla ronda), ver cloudflare/schema.sql.
         numero: salto.numero, variante: `${salto.tipoConteo}-${salto.direccion}`, nivel: salto.nivel,
@@ -296,7 +264,7 @@ export function iniciarJuego(raiz, deps = {}) {
     // error
     progreso.intentos += 1;
     if (!progreso.primerError) progreso.primerError = opcion.tipoError;
-    decir('Intenta otra vez');
+    decir('¡Casi! Inténtalo de nuevo', { clave: 'casi-de-nuevo' });
     const aviso = raiz.querySelector('[data-aviso]');
     if (aviso) aviso.textContent = 'Casi. Mira desde qué techo salta Guarida.';
     const gatoCaja = raiz.querySelector('.gato-saltando');
@@ -337,17 +305,16 @@ export function iniciarJuego(raiz, deps = {}) {
   async function terminarPartida() {
     const correctos = estado.resultados.filter((r) => r.correcto).length;
     const duracionMs = Date.now() - estado.inicioMs;
-    const texto = `Guarida dio ${TOTAL_SALTOS} saltos contigo. Acertaste ${correctos} de ${TOTAL_SALTOS} a la primera.`;
 
     mostrar(h(doc, 'section', { class: 'pantalla-juego pantalla-juego--cierre' },
       gato('feliz', 'saludo-gato'),
-      h(doc, 'h1', { class: 'titulo', texto: '¡Llegamos al final de la calle!', tabindex: '-1', 'data-foco': '' }),
+      h(doc, 'h1', { class: 'titulo', texto: '¡Llegamos al final!', tabindex: '-1', 'data-foco': '' }),
       h(doc, 'p', { class: 'texto texto--grande', texto: `Guarida dio ${TOTAL_SALTOS} saltos contigo.` }),
       h(doc, 'p', { class: 'texto', texto: `Acertaste ${correctos} de ${TOTAL_SALTOS} a la primera.` }),
-      barraDeVoz(() => decir(texto)),
+      barraDeVoz(() => decir('¡Llegamos al final!', { clave: 'cierre-techos' })),
       h(doc, 'a', { class: 'boton', href: '/entrada/', texto: 'Volver' })));
 
-    decir('¡Llegamos al final de la calle!');
+    decir('¡Llegamos al final!', { clave: 'cierre-techos' });
 
     const token = obtenerToken();
     if (!token) return; // no deberia pasar (ya se valido al entrar), pero no se rompe el cierre si pasa.

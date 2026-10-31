@@ -40,6 +40,7 @@ import { h } from '../../entrada/dom.js';
 import { gatoSVG } from '../../entrada/mascota.js';
 import { panSVG, TIPOS_PAN } from './pan.js';
 import { CLAVE_TOKEN } from '../../entrada/api.js';
+import { decir, hayVozEspanol } from '../../entrada/voz.js';
 
 const TOTAL_RONDAS = 9;
 const RONDAS_PARA_SUBIR = 2;
@@ -120,33 +121,6 @@ function generarSecuenciaDeTablas() {
   return mezclar([...TABLAS, ...TABLAS, ...TABLAS]);
 }
 
-/* -------------------------------- audio ---------------------------------- */
-
-function hayVozEspanol() {
-  try {
-    if (!('speechSynthesis' in window)) return false;
-    const voces = window.speechSynthesis.getVoices();
-    return voces.some((v) => v.lang && v.lang.toLowerCase().startsWith('es'));
-  } catch {
-    return false;
-  }
-}
-
-if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.addEventListener?.('voiceschanged', () => window.speechSynthesis.getVoices());
-}
-
-function decir(texto) {
-  try {
-    if (!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance(texto);
-    u.lang = 'es-CL';
-    u.rate = 0.95;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  } catch { /* sin voz disponible: el juego sigue siendo jugable en silencio */ }
-}
 
 /* --------------------------------- juego ---------------------------------- */
 
@@ -218,7 +192,7 @@ export function iniciarJuego(raiz, deps = {}) {
 
   function textoPregunta(ronda) {
     if (ronda.modo === 'inverso') {
-      return `Guarida tiene ${ronda.total} ${nombrePan(ronda.tipoPan, true)} y las quiere repartir en bolsas de ${ronda.panesPorBolsa}. ¿Cuántas bolsas necesita?`;
+      return `Guarida tiene ${ronda.total} ${nombrePan(ronda.tipoPan, true)} para repartir en bolsas de ${ronda.panesPorBolsa}. ¿Cuántas bolsas necesita?`;
     }
     return `¿Cuántas ${nombrePan(ronda.tipoPan, true)} hay en total?`;
   }
@@ -246,12 +220,12 @@ export function iniciarJuego(raiz, deps = {}) {
       ronda.modo === 'directo' ? h(doc, 'p', { class: 'texto', texto: `${ronda.bolsas} ${ronda.bolsas === 1 ? 'bolsa' : 'bolsas'} de ${nombrePan(ronda.tipoPan, true)}` }) : null,
       panaderia,
       h(doc, 'p', { class: 'texto', texto: textoPregunta(ronda) }),
-      barraDeVoz(() => decir(textoPregunta(ronda))),
+      barraDeVoz(() => decir(textoPregunta(ronda), { token: obtenerToken() })),
       avisoAviso,
       h(doc, 'div', { class: 'opciones' }, botonesOpciones),
       h(doc, 'p', { class: 'progreso', texto: `Ronda ${ronda.numero} de ${TOTAL_RONDAS}` })));
 
-    decir(textoPregunta(ronda));
+    decir(textoPregunta(ronda), { token: obtenerToken() });
   }
 
   function mostrarApoyo(ronda, progreso, despues) {
@@ -278,17 +252,17 @@ export function iniciarJuego(raiz, deps = {}) {
       h(doc, 'div', { class: 'grupos-apoyo' }, filas),
       h(doc, 'p', { class: 'texto texto--grande numero-grande', texto }),
       pista,
-      barraDeVoz(() => decir(texto)),
+      barraDeVoz(() => decir(texto, { token: obtenerToken() })),
       h(doc, 'button', { class: 'boton', type: 'button', texto: 'Intentar de nuevo', onclick: despues })));
 
-    decir(texto);
+    decir(texto, { token: obtenerToken() });
     progreso.apoyoMostrado = true;
   }
 
   function elegirOpcion(ronda, progreso, opcion) {
     if (opcion.tipoError === null) {
       const primeraVez = progreso.intentos === 0;
-      decir('¡Muy bien!');
+      decir('¡Muy bien!', { clave: 'muy-bien' });
       estado.resultados.push({
         numero: ronda.numero, variante: `${ronda.tabla}-${ronda.modo}`, nivel: ronda.nivel,
         correcto: primeraVez, usoApoyo: progreso.apoyoMostrado,
@@ -301,7 +275,7 @@ export function iniciarJuego(raiz, deps = {}) {
 
     progreso.intentos += 1;
     if (!progreso.primerError) progreso.primerError = opcion.tipoError;
-    decir('Intenta otra vez');
+    decir('¡Casi! Inténtalo de nuevo', { clave: 'casi-de-nuevo' });
     const aviso = raiz.querySelector('[data-aviso]');
     if (aviso) aviso.textContent = 'Casi. Cuenta cuántas bolsas hay y qué cantidad trae cada una.';
 
@@ -340,17 +314,16 @@ export function iniciarJuego(raiz, deps = {}) {
   async function terminarPartida() {
     const correctos = estado.resultados.filter((r) => r.correcto).length;
     const duracionMs = Date.now() - estado.inicioMs;
-    const texto = `Guarida repartió ${TOTAL_RONDAS} bolsas contigo. Acertaste ${correctos} de ${TOTAL_RONDAS} a la primera.`;
 
     mostrar(h(doc, 'section', { class: 'pantalla-juego pantalla-juego--cierre' },
       gato('feliz', 'saludo-gato'),
-      h(doc, 'h1', { class: 'titulo', texto: '¡La panadería quedó lista!', tabindex: '-1', 'data-foco': '' }),
+      h(doc, 'h1', { class: 'titulo', texto: '¡Panadería lista!', tabindex: '-1', 'data-foco': '' }),
       h(doc, 'p', { class: 'texto texto--grande', texto: `Guarida repartió ${TOTAL_RONDAS} bolsas contigo.` }),
       h(doc, 'p', { class: 'texto', texto: `Acertaste ${correctos} de ${TOTAL_RONDAS} a la primera.` }),
-      barraDeVoz(() => decir(texto)),
+      barraDeVoz(() => decir('¡Panadería lista!', { clave: 'cierre-panes' })),
       h(doc, 'a', { class: 'boton', href: '/entrada/', texto: 'Volver' })));
 
-    decir('¡La panadería quedó lista!');
+    decir('¡Panadería lista!', { clave: 'cierre-panes' });
 
     const token = obtenerToken();
     if (!token) return;

@@ -37,6 +37,7 @@ import { h } from '../../entrada/dom.js';
 import { gatoSVG } from '../../entrada/mascota.js';
 import { sobreSVG, laminaSVG, laminaRepetidaSVG } from './lamina.js';
 import { CLAVE_TOKEN } from '../../entrada/api.js';
+import { decir, hayVozEspanol } from '../../entrada/voz.js';
 
 const TOTAL_RONDAS = 9;
 const RONDAS_PARA_SUBIR = 2;
@@ -194,34 +195,6 @@ function generarSecuenciaDeTipos() {
   return mezclar(['juntar', 'juntar', 'juntar', 'juntar', 'juntar', 'regalar', 'regalar', 'regalar', 'regalar']);
 }
 
-/* -------------------------------- audio ---------------------------------- */
-
-function hayVozEspanol() {
-  try {
-    if (!('speechSynthesis' in window)) return false;
-    const voces = window.speechSynthesis.getVoices();
-    return voces.some((v) => v.lang && v.lang.toLowerCase().startsWith('es'));
-  } catch {
-    return false;
-  }
-}
-
-if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.addEventListener?.('voiceschanged', () => window.speechSynthesis.getVoices());
-}
-
-function decir(texto) {
-  try {
-    if (!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance(texto);
-    u.lang = 'es-CL';
-    u.rate = 0.95;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  } catch { /* sin voz disponible: el juego sigue siendo jugable en silencio */ }
-}
-
 /* --------------------------------- juego ---------------------------------- */
 
 export function iniciarJuego(raiz, deps = {}) {
@@ -310,10 +283,10 @@ export function iniciarJuego(raiz, deps = {}) {
   function textoPregunta(ronda) {
     if (ronda.modo === 'juntar') return `Guarida tiene ${ronda.a} láminas y consigue ${ronda.b} más. ¿Cuántas tiene ahora?`;
     if (ronda.modo === 'regalar') return `Guarida tiene ${ronda.a} láminas y regala ${ronda.b}. ¿Cuántas le quedan?`;
-    if (ronda.modo === 'dos_pasos') return `Guarida tiene ${ronda.a} láminas, consigue ${ronda.b} más y después regala ${ronda.c}. ¿Cuántas tiene al final?`;
+    if (ronda.modo === 'dos_pasos') return `Guarida tiene ${ronda.a} láminas, consigue ${ronda.b} más y luego regala ${ronda.c}. ¿Cuántas tiene al final?`;
     if (ronda.modo === 'intercambio') return `Guarida tiene ${ronda.repetidas} láminas repetidas e intercambia ${ronda.intercambia}. ¿Cuántas repetidas le quedan?`;
     return ronda.pregunta === 'sobres'
-      ? `Guarida tiene ${ronda.total} láminas. ¿Cuántos sobres completos de 10 puede armar?`
+      ? `Guarida tiene ${ronda.total} láminas. ¿Cuántos sobres de 10 puede armar?`
       : `Guarida tiene ${ronda.total} láminas. ¿Cuántas quedan sueltas, sin alcanzar para un sobre?`;
   }
 
@@ -337,12 +310,12 @@ export function iniciarJuego(raiz, deps = {}) {
       h(doc, 'p', { class: 'escena-etiqueta', texto: 'El álbum de láminas' }),
       visualDeRonda(ronda),
       h(doc, 'p', { class: 'texto', texto: textoPregunta(ronda) }),
-      barraDeVoz(() => decir(textoPregunta(ronda))),
+      barraDeVoz(() => decir(textoPregunta(ronda), { token: obtenerToken() })),
       avisoAviso,
       h(doc, 'div', { class: 'opciones' }, botonesOpciones),
       h(doc, 'p', { class: 'progreso', texto: `Ronda ${ronda.numero} de ${TOTAL_RONDAS}` })));
 
-    decir(textoPregunta(ronda));
+    decir(textoPregunta(ronda), { token: obtenerToken() });
   }
 
   function textoApoyo(ronda) {
@@ -375,17 +348,17 @@ export function iniciarJuego(raiz, deps = {}) {
       visualDeRonda(ronda),
       h(doc, 'p', { class: 'texto texto--grande numero-grande', texto }),
       pistaDecena(ronda),
-      barraDeVoz(() => decir(texto)),
+      barraDeVoz(() => decir(texto, { token: obtenerToken() })),
       h(doc, 'button', { class: 'boton', type: 'button', texto: 'Intentar de nuevo', onclick: despues })));
 
-    decir(texto);
+    decir(texto, { token: obtenerToken() });
     progreso.apoyoMostrado = true;
   }
 
   function elegirOpcion(ronda, progreso, opcion) {
     if (opcion.tipoError === null) {
       const primeraVez = progreso.intentos === 0;
-      decir('¡Muy bien!');
+      decir('¡Muy bien!', { clave: 'muy-bien' });
       estado.resultados.push({
         numero: ronda.numero, variante: `${ronda.modo}-nivel${ronda.nivel}`, nivel: ronda.nivel,
         correcto: primeraVez, usoApoyo: progreso.apoyoMostrado,
@@ -398,7 +371,7 @@ export function iniciarJuego(raiz, deps = {}) {
 
     progreso.intentos += 1;
     if (!progreso.primerError) progreso.primerError = opcion.tipoError;
-    decir('Intenta otra vez');
+    decir('¡Casi! Inténtalo de nuevo', { clave: 'casi-de-nuevo' });
     const aviso = raiz.querySelector('[data-aviso]');
     if (aviso) aviso.textContent = 'Casi. Fíjate en los sobres y en las láminas sueltas.';
 
@@ -437,17 +410,16 @@ export function iniciarJuego(raiz, deps = {}) {
   async function terminarPartida() {
     const correctos = estado.resultados.filter((r) => r.correcto).length;
     const duracionMs = Date.now() - estado.inicioMs;
-    const texto = `Guarida avanzó ${TOTAL_RONDAS} páginas del álbum contigo. Acertaste ${correctos} de ${TOTAL_RONDAS} a la primera.`;
 
     mostrar(h(doc, 'section', { class: 'pantalla-juego pantalla-juego--cierre' },
       gato('feliz', 'saludo-gato'),
       h(doc, 'h1', { class: 'titulo', texto: '¡El álbum avanzó!', tabindex: '-1', 'data-foco': '' }),
       h(doc, 'p', { class: 'texto texto--grande', texto: `Guarida avanzó ${TOTAL_RONDAS} páginas contigo.` }),
       h(doc, 'p', { class: 'texto', texto: `Acertaste ${correctos} de ${TOTAL_RONDAS} a la primera.` }),
-      barraDeVoz(() => decir(texto)),
+      barraDeVoz(() => decir('¡El álbum avanzó!', { clave: 'cierre-album' })),
       h(doc, 'a', { class: 'boton', href: '/entrada/', texto: 'Volver' })));
 
-    decir('¡El álbum avanzó!');
+    decir('¡El álbum avanzó!', { clave: 'cierre-album' });
 
     const token = obtenerToken();
     if (!token) return;

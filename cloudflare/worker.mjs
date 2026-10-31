@@ -12,6 +12,7 @@
 
 import { manejarEntrada, manejarEntrarEstudiante } from "./curso.mjs";
 import { manejarIntento } from "./intentos.mjs";
+import { manejarVoz } from "./voz.mjs";
 import { obtenerDocente, respuestaNoAutorizado } from "./acceso.mjs";
 import {
   listarCursos, crearCurso, obtenerCurso, actualizarCurso, eliminarCurso, regenerarCodigo,
@@ -106,6 +107,10 @@ export default {
 
     if (pathname === "/api/intentos" && request.method === "POST") {
       return manejarIntento(request, env);
+    }
+
+    if (pathname === "/api/voz" && request.method === "POST") {
+      return manejarVoz(request, env);
     }
 
     if (pathname.startsWith("/api/docente/")) {

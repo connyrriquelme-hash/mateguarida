@@ -122,16 +122,25 @@ existen, bloquean el deploy del custom domain.
    estudiante/mesa/OA y en qué se equivocan. Cloudflare Access configurado
    y verificado (`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD_TAG` en `wrangler.jsonc`).
 4. **Minijuegos** — en curso. Cada juego registra su detalle por ronda en
-   la tabla genérica `ronda` (`id, intento_id, numero, variante, nivel,
-   correcto, uso_apoyo, tipo_error`): `variante` y `tipo_error` son texto
-   libre, cada juego define los suyos (no hay un `CHECK` cerrado
+   la tabla genérica `ronda` (`id, intento_id, numero, variante, oa_code,
+   nivel, correcto, uso_apoyo, tipo_error`): `variante` y `tipo_error` son
+   texto libre, cada juego define los suyos (no hay un `CHECK` cerrado
    compartido — el primer intento de compartir uno con el segundo juego
    falló por eso, ver `cloudflare/migrations/0004_ronda_generica.sql`).
-   Un juego puede declarar más de un OA por nivel (`data/juegos-oa.json`):
-   el avance cuenta para TODOS los que declare, vía la tabla puente
-   `intento_oa` (`cloudflare/migrations/0005_intento_oa.sql` — sin esto,
-   `intento.oa_code` solo guarda el primero y los demás OA nunca
-   acumulaban avance). Contrato de ingesta: `POST /api/intentos` con
+   El OA se atribuye POR RONDA, no por intento completo: el servidor usa
+   el primer tramo de `variante` (antes del primer `-`) para elegir entre
+   `oaPorVariante`/`oaPorDefecto` en `data/juegos-oa.json`
+   (`oaDeRonda` en `cloudflare/curriculo.mjs`). Un mismo intento puede así
+   alimentar más de un OA si mezcla variantes de distinto tipo (ej.
+   "Guarida completa su álbum" mezcla OA-09 y OA-07 en la misma partida);
+   `avance_oa` se recalcula desde `ronda`, nunca desde el intento completo
+   (`cloudflare/migrations/0006_oa_por_ronda.sql` — reemplazó el enfoque
+   anterior de la tabla puente `intento_oa`, que repartía el intento
+   completo por igual entre todos los OA declarados y por eso duplicaba
+   el conteo de partidas jugadas en el panel). El panel distingue
+   "partidas jugadas" (`porEstudiante`/`porMesa`, contadas desde `intento`)
+   de "avance por OA" (`porOA`, contado desde `avance_oa`). Contrato de
+   ingesta: `POST /api/intentos` con
    `{ token, juegoId, duracionMs, dispositivo?, rondas: [...] }`.
 
    **Orden confirmado** (uno por eje de 2º básico, más dos que profundizan
@@ -141,8 +150,12 @@ existen, bloquean el deploy del custom domain.
    2. ✅ **Guarida reparte los panes** — multiplicación, tablas del 2, 5
       y 10 (MA02-OA-11, completo).
    3. ✅ **Guarida completa su álbum** — adición/sustracción 0-100 con
-      cálculo mental y valor posicional (MA02-OA-09, MA02-OA-06,
-      MA02-OA-07).
+      valor posicional (MA02-OA-09 en "juntar"/"regalar"/"dos_pasos"/
+      "intercambio", MA02-OA-07 en "arma_numero"). No declara MA02-OA-06
+      (estrategias de cálculo mental): la pista de "completar la decena"
+      solo aparece en el apoyo, ninguna ronda la pide ni la verifica, así
+      que no hay una ronda a la que atribuírselo con el mismo criterio que
+      a los demás OA (ver `porQue` en `data/juegos-oa.json`).
    4. Guarida ordena el tendedero — patrones (MA02-OA-12).
    5. Guarida llega a la hora — lectura de hora (MA02-OA-18).
    6. Guarida ordena el taller (+ geoplano) — figuras 2D, incluye
@@ -181,9 +194,28 @@ existen, bloquean el deploy del custom domain.
    `confunde_sobres_y_sueltas`.
 
    **Apoyo** en los tres: conteo concreto tras 2 fallos seguidos en la
-   misma ronda. **Voz**: `speechSynthesis` (es-CL); si el aparato no
-   tiene voz en español aparece un aviso discreto, y siempre hay un
-   botón 🔊 para repetirla.
+   misma ronda. **Voz** (`public/entrada/voz.js`, compartido por los 3
+   juegos — antes vivía copiado en cada uno): tres niveles, en orden de
+   preferencia.
+   1. Frases FIJAS (ánimo "¡Muy bien!"/"¡Casi! Inténtalo de nuevo" y los 3
+      cierres — compartidas entre juegos donde el texto es idéntico):
+      grabadas por Conny, archivo estático en `public/audio/frases/<clave>.mp3`.
+   2. Frases VARIABLES (preguntas y apoyos, cambian los números cada
+      ronda): `POST /api/voz` (`cloudflare/voz.mjs`) sintetiza con Azure
+      Speech (voz `es-CL-CatalinaNeural`, ver `AZURE_SPEECH_VOZ` en
+      `wrangler.jsonc`) y cachea el resultado en R2 (`env.AUDIO`, bucket
+      `mateguarida-audio`) con una clave que depende solo del texto —
+      nunca del estudiante. Requiere sesión de estudiante válida (mismo
+      token que `/api/intentos`): cuesta dinero real por llamada a Azure,
+      no puede quedar abierto a cualquiera.
+   3. Respaldo final: `speechSynthesis` del navegador, con prioridad
+      es-CL > es-419/es-US/es-MX "Natural"/"Online" > cualquier otra
+      es-*, velocidad 0.92. Si falla cualquiera de los dos niveles
+      anteriores (sin internet, Azure caído, archivo no grabado todavía),
+      cae aquí sin romper el juego — nunca se concatenan clips a medias
+      (sonaría robótico), siempre se dice la frase completa con una sola
+      fuente de voz. `AZURE_SPEECH_KEY` es secreto del Worker
+      (`wrangler secret put`), nunca vive en `wrangler.jsonc`.
    **Sumo Primero**: campo editable desde el panel por juego y nivel
    (`juego_sumo_primero`, tomo/capítulo/título/páginas), vacío hasta que
    Conny lo complete ahí mismo — no bloquea ningún juego.
