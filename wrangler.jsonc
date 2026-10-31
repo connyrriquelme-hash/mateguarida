@@ -18,12 +18,7 @@
     {
       "binding": "DB",
       "database_name": "mateguarida-db",
-      // PENDIENTE: reemplazar con el id real que entrega
-      //   npx wrangler d1 create mateguarida-db
-      // una vez que Conny haya iniciado sesion (npx wrangler login). Con
-      // este valor de relleno, "wrangler dev" y "wrangler deploy" fallan
-      // a proposito en vez de apuntar a una base equivocada.
-      "database_id": "PENDIENTE-crear-con-wrangler-d1-create"
+      "database_id": "d8adeadf-8362-4f03-805c-f59ef8b7fd9d"
     }
   ]
 }
