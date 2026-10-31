@@ -4,13 +4,16 @@
  *
  * El servidor NO confia en el estudiante_id ni en el OA que mande el
  * cliente: el estudiante se identifica por su token de sesion (el que
- * devuelve /api/estudiantes/:id/entrar) y el OA se deduce del juego y del
- * nivel del curso (cloudflare/curriculo.mjs), igual que Lectoguarida.
+ * devuelve /api/estudiantes/:id/entrar) y el OA se deduce POR RONDA, del
+ * juego, el nivel del curso y la `variante` de esa ronda
+ * (cloudflare/curriculo.mjs: oaDeRonda), igual que Lectoguarida.
  *
  * `rondas` es generico (ver cloudflare/schema.sql: tabla `ronda`): cada
  * juego manda `variante` y `tipoError` como texto libre con sus propios
  * valores, no una lista cerrada compartida -- cada OA tiene sus propios
- * errores tipicos.
+ * errores tipicos. El avance por OA (avance_oa) se recalcula desde las
+ * rondas, no desde el intento completo: un mismo intento puede alimentar
+ * mas de un OA si mezcla variantes de distinto tipo.
  *
  * id lo puede mandar el cliente (uuid): reenviar el mismo intento tras una
  * caida de red no duplica filas (INSERT OR IGNORE). Si el intento ya
@@ -19,7 +22,7 @@
  */
 
 import { existeJuego } from "./juegos.mjs";
-import { oaDeJuego } from "./curriculo.mjs";
+import { oaDeRonda } from "./curriculo.mjs";
 
 const MAX_RONDAS = 30; // margen holgado sobre las 9 de una partida normal
 const MAX_LARGO_TEXTO = 40; // variante / tipoError: textos cortos, no HTML
@@ -87,11 +90,6 @@ export async function manejarIntento(request, env) {
   const duracionMs = Number.isInteger(body.duracionMs) && body.duracionMs >= 0 ? body.duracionMs : null;
   const dispositivo = ["tablet", "pizarra", "otro"].includes(body.dispositivo) ? body.dispositivo : null;
 
-  // El OA se deduce del juego + nivel del CURSO del estudiante, nunca de lo
-  // que mande el cliente.
-  const oas = oaDeJuego(juegoId, estudiante.nivel);
-  const oaCode = oas[0] || null;
-
   const intentoId = typeof body.id === "string" && body.id ? body.id : crypto.randomUUID();
   const ahoraIso = new Date().toISOString();
   const preguntasTotal = rondas.length;
@@ -99,36 +97,33 @@ export async function manejarIntento(request, env) {
 
   const resultadoInsert = await env.DB.prepare(
     "INSERT OR IGNORE INTO intento " +
-    "(id, estudiante_id, juego_id, oa_code, preguntas_total, preguntas_correctas, duracion_ms, completado, dispositivo, ocurrido_en, recibido_en) " +
-    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 1, ?8, ?9, ?10)"
+    "(id, estudiante_id, juego_id, preguntas_total, preguntas_correctas, duracion_ms, completado, dispositivo, ocurrido_en, recibido_en) " +
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1, ?7, ?8, ?9)"
   ).bind(
-    intentoId, estudiante.id, juegoId, oaCode, preguntasTotal, preguntasCorrectas,
+    intentoId, estudiante.id, juegoId, preguntasTotal, preguntasCorrectas,
     duracionMs, dispositivo, String(body.ocurridoEn || ahoraIso), ahoraIso
   ).run();
 
   const yaExistia = resultadoInsert.meta.changes === 0;
   if (!yaExistia) {
-    const sentenciasRondas = rondas.map((r) => env.DB.prepare(
-      "INSERT INTO ronda (id, intento_id, numero, variante, nivel, correcto, uso_apoyo, tipo_error, ocurrido_en) " +
-      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"
+    // El OA se deduce por RONDA, del juego + nivel del CURSO + variante de
+    // esa ronda (nunca de lo que mande el cliente): un mismo juego puede
+    // mezclar OA distintos segun el tipo de problema (ver curriculo.mjs).
+    const oaPorRonda = rondas.map((r) => oaDeRonda(juegoId, estudiante.nivel, r.variante));
+    const sentenciasRondas = rondas.map((r, i) => env.DB.prepare(
+      "INSERT INTO ronda (id, intento_id, numero, variante, oa_code, nivel, correcto, uso_apoyo, tipo_error, ocurrido_en) " +
+      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
     ).bind(
       crypto.randomUUID(), intentoId, r.numero,
       r.variante !== undefined && r.variante !== null ? String(r.variante) : null,
+      oaPorRonda[i],
       r.nivel, r.correcto ? 1 : 0, r.usoApoyo ? 1 : 0,
       r.correcto ? null : (r.tipoError ? String(r.tipoError) : null), ahoraIso
     ));
     await env.DB.batch(sentenciasRondas);
 
-    // Un juego puede declarar mas de un OA por nivel (ver
-    // data/juegos-oa.json); intento.oa_code solo guarda el primero (para el
-    // desglose de errores), pero el avance real cuenta para TODOS los que
-    // declare, via intento_oa.
-    if (oas.length) {
-      await env.DB.batch(oas.map((codigo) =>
-        env.DB.prepare("INSERT OR IGNORE INTO intento_oa (intento_id, oa_code) VALUES (?1, ?2)").bind(intentoId, codigo)
-      ));
-      for (const codigo of oas) await recalcularAvanceOA(env, estudiante.id, codigo);
-    }
+    const oasDistintos = [...new Set(oaPorRonda.filter(Boolean))];
+    for (const codigo of oasDistintos) await recalcularAvanceOA(env, estudiante.id, codigo);
   }
 
   return json({ ok: true, preguntasTotal, preguntasCorrectas }, yaExistia ? 200 : 201);
@@ -136,10 +131,10 @@ export async function manejarIntento(request, env) {
 
 async function recalcularAvanceOA(env, estudianteId, oaCode) {
   const agregado = await env.DB.prepare(
-    "SELECT COUNT(*) AS intentos_total, COALESCE(SUM(i.preguntas_total), 0) AS preguntas_total, " +
-    "  COALESCE(SUM(i.preguntas_correctas), 0) AS preguntas_correctas, MAX(i.ocurrido_en) AS ultimo " +
-    "FROM intento i JOIN intento_oa io ON io.intento_id = i.id " +
-    "WHERE i.estudiante_id = ?1 AND io.oa_code = ?2"
+    "SELECT COUNT(DISTINCT r.intento_id) AS intentos_total, COUNT(*) AS preguntas_total, " +
+    "  COALESCE(SUM(r.correcto), 0) AS preguntas_correctas, MAX(r.ocurrido_en) AS ultimo " +
+    "FROM ronda r JOIN intento i ON i.id = r.intento_id " +
+    "WHERE i.estudiante_id = ?1 AND r.oa_code = ?2"
   ).bind(estudianteId, oaCode).first();
 
   const total = Number(agregado.preguntas_total) || 0;

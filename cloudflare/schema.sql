@@ -111,12 +111,6 @@ CREATE TABLE IF NOT EXISTS intento (
   id                   TEXT PRIMARY KEY,
   estudiante_id        TEXT NOT NULL,
   juego_id             TEXT NOT NULL,
-  -- OA principal que declara el juego para este nivel (ver data/oa.json);
-  -- si el juego declara mas de un OA, este es solo el primero (se usa para
-  -- el desglose de errores, ver docente.mjs). El avance real por OA se
-  -- cuenta por tabla intento_oa, que puede tener varios por intento.
-  -- Puede ir vacio si el juego todavia no declara OA.
-  oa_code              TEXT,
   preguntas_total      INTEGER NOT NULL DEFAULT 0 CHECK (preguntas_total >= 0),
   preguntas_correctas  INTEGER NOT NULL DEFAULT 0 CHECK (preguntas_correctas >= 0 AND preguntas_correctas <= preguntas_total),
   duracion_ms          INTEGER CHECK (duracion_ms IS NULL OR duracion_ms >= 0),
@@ -127,22 +121,15 @@ CREATE TABLE IF NOT EXISTS intento (
 );
 
 CREATE INDEX IF NOT EXISTS idx_intento_estudiante ON intento(estudiante_id, ocurrido_en);
-CREATE INDEX IF NOT EXISTS idx_intento_oa ON intento(estudiante_id, oa_code, ocurrido_en);
 
--- Todos los OA que trabajo un intento (un juego puede declarar mas de uno
--- por nivel, ver data/juegos-oa.json; el servidor los deduce con
--- cloudflare/curriculo.mjs, nunca confia en lo que manda el cliente). Mismo
--- patron que learning_evidence_oa de Lectoguarida. avance_oa se recalcula
--- sumando por aqui, no por intento.oa_code (que solo guarda el primero).
-CREATE TABLE IF NOT EXISTS intento_oa (
-  intento_id TEXT NOT NULL REFERENCES intento(id),
-  oa_code    TEXT NOT NULL,
-  PRIMARY KEY (intento_id, oa_code)
-);
-
--- Agregado por estudiante y OA que lee el panel docente. Nunca se consulta
--- `intento` directamente desde el panel: se recalcula aqui despues de cada
--- ingesta (mismo patron que learning_oa_profile de Lectoguarida).
+-- Agregado por estudiante y OA que lee el panel docente. Se recalcula desde
+-- `ronda.oa_code` (cada ronda sabe su propio OA segun el tipo de problema,
+-- ver cloudflare/curriculo.mjs: oaDeRonda), no desde el intento completo --
+-- un intento puede mezclar rondas de OA distintos (ej. "Guarida completa su
+-- album" mezcla OA-09 y OA-07 en la misma partida) y cada uno debe sumar
+-- solo lo suyo. Nunca se consulta `ronda`/`intento` directamente desde el
+-- panel para esto: se recalcula aqui despues de cada ingesta (mismo patron
+-- que learning_oa_profile de Lectoguarida).
 CREATE TABLE IF NOT EXISTS avance_oa (
   estudiante_id    TEXT NOT NULL,
   oa_code          TEXT NOT NULL,
@@ -199,8 +186,15 @@ CREATE TABLE IF NOT EXISTS ronda (
   intento_id  TEXT NOT NULL REFERENCES intento(id),
   numero      INTEGER NOT NULL CHECK (numero >= 1),
   -- Que variante de la pregunta era (ej. "5-adelante" en los techos,
-  -- "10-directo" en el reparto de panes). Libre por juego.
+  -- "10-directo" en el reparto de panes, "arma_numero-nivel4" en el album).
+  -- Libre por juego; el servidor usa el primer tramo (antes del primer "-")
+  -- para deducir el OA (ver oaDeRonda en cloudflare/curriculo.mjs).
   variante    TEXT,
+  -- OA que trabaja ESTA ronda en particular (no el juego completo): el
+  -- servidor lo calcula a partir de juego + nivel + variante, nunca confia
+  -- en lo que mande el cliente. Puede ir vacio si el juego/nivel todavia no
+  -- declara OA en data/juegos-oa.json.
+  oa_code     TEXT,
   nivel       INTEGER NOT NULL CHECK (nivel BETWEEN 1 AND 4),
   correcto    INTEGER NOT NULL CHECK (correcto IN (0, 1)),
   uso_apoyo   INTEGER NOT NULL DEFAULT 0 CHECK (uso_apoyo IN (0, 1)),
@@ -212,6 +206,7 @@ CREATE TABLE IF NOT EXISTS ronda (
 
 CREATE INDEX IF NOT EXISTS idx_ronda_intento ON ronda(intento_id);
 CREATE INDEX IF NOT EXISTS idx_ronda_error ON ronda(tipo_error);
+CREATE INDEX IF NOT EXISTS idx_ronda_oa ON ronda(oa_code);
 
 -- ---------------------------------------------------------------------------
 -- Referencia a Sumo Primero por juego y nivel: SOLO tomo/capitulo/paginas (la

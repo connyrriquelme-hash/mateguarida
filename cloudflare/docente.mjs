@@ -461,12 +461,15 @@ export async function obtenerAvance(env, cursoId) {
   const curso = await env.DB.prepare("SELECT id FROM curso WHERE id = ?1").bind(cursoId).first();
   if (!curso) return json({ error: "Curso no encontrado." }, 404);
 
+  // porEstudiante y porMesa cuentan PARTIDAS JUGADAS (intento), no avance_oa:
+  // una misma partida puede alimentar varios OA (ver intentos.mjs), y sumar
+  // avance_oa aqui contaria esa partida una vez por cada OA que toco.
   const { results: porEstudiante } = await env.DB.prepare(
     "SELECT e.id AS estudiante_id, e.nombre, e.inicial_apellido, e.mesa, " +
-    "  COALESCE(SUM(a.intentos_total), 0) AS intentos_total, " +
-    "  COALESCE(SUM(a.preguntas_total), 0) AS preguntas_total, " +
-    "  COALESCE(SUM(a.preguntas_correctas), 0) AS preguntas_correctas " +
-    "FROM estudiante e LEFT JOIN avance_oa a ON a.estudiante_id = e.id " +
+    "  COUNT(DISTINCT i.id) AS intentos_total, " +
+    "  COALESCE(SUM(i.preguntas_total), 0) AS preguntas_total, " +
+    "  COALESCE(SUM(i.preguntas_correctas), 0) AS preguntas_correctas " +
+    "FROM estudiante e LEFT JOIN intento i ON i.estudiante_id = e.id " +
     "WHERE e.curso_id = ?1 AND e.activo = 1 " +
     "GROUP BY e.id ORDER BY e.nombre COLLATE NOCASE"
   ).bind(cursoId).all();
@@ -474,10 +477,10 @@ export async function obtenerAvance(env, cursoId) {
   const { results: porMesa } = await env.DB.prepare(
     "SELECT COALESCE(e.mesa, '(sin mesa)') AS mesa, " +
     "  COUNT(DISTINCT e.id) AS total_estudiantes, " +
-    "  COALESCE(SUM(a.intentos_total), 0) AS intentos_total, " +
-    "  COALESCE(SUM(a.preguntas_total), 0) AS preguntas_total, " +
-    "  COALESCE(SUM(a.preguntas_correctas), 0) AS preguntas_correctas " +
-    "FROM estudiante e LEFT JOIN avance_oa a ON a.estudiante_id = e.id " +
+    "  COUNT(DISTINCT i.id) AS intentos_total, " +
+    "  COALESCE(SUM(i.preguntas_total), 0) AS preguntas_total, " +
+    "  COALESCE(SUM(i.preguntas_correctas), 0) AS preguntas_correctas " +
+    "FROM estudiante e LEFT JOIN intento i ON i.estudiante_id = e.id " +
     "WHERE e.curso_id = ?1 AND e.activo = 1 " +
     "GROUP BY mesa ORDER BY mesa COLLATE NOCASE"
   ).bind(cursoId).all();
@@ -495,11 +498,13 @@ export async function obtenerAvance(env, cursoId) {
 
   // Desglose de errores tipicos (solo juegos con detalle por ronda, ver
   // cloudflare/intentos.mjs): cuantas veces cada tipo_error aparecio, por OA.
+  // El OA es el de la RONDA (sa.oa_code), no el del intento completo: una
+  // misma partida puede mezclar rondas de distinto OA.
   const { results: erroresCrudos } = await env.DB.prepare(
-    "SELECT i.oa_code, sa.tipo_error, COUNT(*) AS cantidad " +
+    "SELECT sa.oa_code, sa.tipo_error, COUNT(*) AS cantidad " +
     "FROM ronda sa JOIN intento i ON i.id = sa.intento_id JOIN estudiante e ON e.id = i.estudiante_id " +
     "WHERE e.curso_id = ?1 AND e.activo = 1 AND sa.correcto = 0 AND sa.tipo_error IS NOT NULL " +
-    "GROUP BY i.oa_code, sa.tipo_error"
+    "GROUP BY sa.oa_code, sa.tipo_error"
   ).bind(cursoId).all();
 
   const erroresPorOA = {};
