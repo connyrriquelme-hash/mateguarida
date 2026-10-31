@@ -127,8 +127,12 @@ existen, bloquean el deploy del custom domain.
    libre, cada juego define los suyos (no hay un `CHECK` cerrado
    compartido — el primer intento de compartir uno con el segundo juego
    falló por eso, ver `cloudflare/migrations/0004_ronda_generica.sql`).
-   Contrato de ingesta: `POST /api/intentos` con `{ token, juegoId,
-   duracionMs, dispositivo?, rondas: [...] }`.
+   Un juego puede declarar más de un OA por nivel (`data/juegos-oa.json`):
+   el avance cuenta para TODOS los que declare, vía la tabla puente
+   `intento_oa` (`cloudflare/migrations/0005_intento_oa.sql` — sin esto,
+   `intento.oa_code` solo guarda el primero y los demás OA nunca
+   acumulaban avance). Contrato de ingesta: `POST /api/intentos` con
+   `{ token, juegoId, duracionMs, dispositivo?, rondas: [...] }`.
 
    **Orden confirmado** (uno por eje de 2º básico, más dos que profundizan
    Números y Operaciones):
@@ -136,9 +140,9 @@ existen, bloquean el deploy del custom domain.
       parcial: no cubre "de 100 en 100").
    2. ✅ **Guarida reparte los panes** — multiplicación, tablas del 2, 5
       y 10 (MA02-OA-11, completo).
-   3. **Guarida completa su álbum** — adición/sustracción 0-100 con
+   3. ✅ **Guarida completa su álbum** — adición/sustracción 0-100 con
       cálculo mental y valor posicional (MA02-OA-09, MA02-OA-06,
-      MA02-OA-07). Diseño aprobado, sin programar aún.
+      MA02-OA-07).
    4. Guarida ordena el tendedero — patrones (MA02-OA-12).
    5. Guarida llega a la hora — lectura de hora (MA02-OA-18).
    6. Guarida ordena el taller (+ geoplano) — figuras 2D, incluye
@@ -163,10 +167,23 @@ existen, bloquean el deploy del custom domain.
    improvisar. Distractores: `suma_en_vez_de_multiplicar`,
    `tabla_equivocada`, `conteo_parcial`.
 
-   **Apoyo** en ambos: conteo concreto tras 2 fallos seguidos en la misma
-   ronda. **Voz**: `speechSynthesis` (es-CL); si el aparato no tiene voz
-   en español aparece un aviso discreto, y siempre hay un botón 🔊 para
-   repetirla.
+   **Guarida completa su álbum** (`public/juegos/guarida-completa-su-album/`):
+   un álbum de láminas genérico (sin marcas), sobres de 10 (decenas) y
+   láminas sueltas (unidades), dibujados en SVG propio
+   (`lamina.js`). 9 rondas: niveles 1-3 son 'juntar' (suma) o 'regalar'
+   (resta) de un paso, con rango y mezcla sobres/sueltas creciendo por
+   nivel; nivel 4 mezcla tres variantes al azar — `arma_numero` (dado
+   un total, cuántos sobres o sueltas tiene; cubre MA02-OA-07 directo),
+   `dos_pasos` (consigue y después regala, en la misma ronda) e
+   `intercambio` (láminas repetidas). La variante "¿cuántas faltan para
+   100?" del diseño original se reemplazó por estas dos últimas, a
+   pedido. Distractores: `opera_al_reves`, `no_completa_decena`,
+   `confunde_sobres_y_sueltas`.
+
+   **Apoyo** en los tres: conteo concreto tras 2 fallos seguidos en la
+   misma ronda. **Voz**: `speechSynthesis` (es-CL); si el aparato no
+   tiene voz en español aparece un aviso discreto, y siempre hay un
+   botón 🔊 para repetirla.
    **Sumo Primero**: campo editable desde el panel por juego y nivel
    (`juego_sumo_primero`, tomo/capítulo/título/páginas), vacío hasta que
    Conny lo complete ahí mismo — no bloquea ningún juego.

@@ -119,7 +119,16 @@ export async function manejarIntento(request, env) {
     ));
     await env.DB.batch(sentenciasRondas);
 
-    if (oaCode) await recalcularAvanceOA(env, estudiante.id, oaCode);
+    // Un juego puede declarar mas de un OA por nivel (ver
+    // data/juegos-oa.json); intento.oa_code solo guarda el primero (para el
+    // desglose de errores), pero el avance real cuenta para TODOS los que
+    // declare, via intento_oa.
+    if (oas.length) {
+      await env.DB.batch(oas.map((codigo) =>
+        env.DB.prepare("INSERT OR IGNORE INTO intento_oa (intento_id, oa_code) VALUES (?1, ?2)").bind(intentoId, codigo)
+      ));
+      for (const codigo of oas) await recalcularAvanceOA(env, estudiante.id, codigo);
+    }
   }
 
   return json({ ok: true, preguntasTotal, preguntasCorrectas }, yaExistia ? 200 : 201);
@@ -127,9 +136,10 @@ export async function manejarIntento(request, env) {
 
 async function recalcularAvanceOA(env, estudianteId, oaCode) {
   const agregado = await env.DB.prepare(
-    "SELECT COUNT(*) AS intentos_total, COALESCE(SUM(preguntas_total), 0) AS preguntas_total, " +
-    "  COALESCE(SUM(preguntas_correctas), 0) AS preguntas_correctas, MAX(ocurrido_en) AS ultimo " +
-    "FROM intento WHERE estudiante_id = ?1 AND oa_code = ?2"
+    "SELECT COUNT(*) AS intentos_total, COALESCE(SUM(i.preguntas_total), 0) AS preguntas_total, " +
+    "  COALESCE(SUM(i.preguntas_correctas), 0) AS preguntas_correctas, MAX(i.ocurrido_en) AS ultimo " +
+    "FROM intento i JOIN intento_oa io ON io.intento_id = i.id " +
+    "WHERE i.estudiante_id = ?1 AND io.oa_code = ?2"
   ).bind(estudianteId, oaCode).first();
 
   const total = Number(agregado.preguntas_total) || 0;

@@ -111,7 +111,10 @@ CREATE TABLE IF NOT EXISTS intento (
   id                   TEXT PRIMARY KEY,
   estudiante_id        TEXT NOT NULL,
   juego_id             TEXT NOT NULL,
-  -- OA principal que declara el juego para este nivel (ver data/oa.json).
+  -- OA principal que declara el juego para este nivel (ver data/oa.json);
+  -- si el juego declara mas de un OA, este es solo el primero (se usa para
+  -- el desglose de errores, ver docente.mjs). El avance real por OA se
+  -- cuenta por tabla intento_oa, que puede tener varios por intento.
   -- Puede ir vacio si el juego todavia no declara OA.
   oa_code              TEXT,
   preguntas_total      INTEGER NOT NULL DEFAULT 0 CHECK (preguntas_total >= 0),
@@ -125,6 +128,17 @@ CREATE TABLE IF NOT EXISTS intento (
 
 CREATE INDEX IF NOT EXISTS idx_intento_estudiante ON intento(estudiante_id, ocurrido_en);
 CREATE INDEX IF NOT EXISTS idx_intento_oa ON intento(estudiante_id, oa_code, ocurrido_en);
+
+-- Todos los OA que trabajo un intento (un juego puede declarar mas de uno
+-- por nivel, ver data/juegos-oa.json; el servidor los deduce con
+-- cloudflare/curriculo.mjs, nunca confia en lo que manda el cliente). Mismo
+-- patron que learning_evidence_oa de Lectoguarida. avance_oa se recalcula
+-- sumando por aqui, no por intento.oa_code (que solo guarda el primero).
+CREATE TABLE IF NOT EXISTS intento_oa (
+  intento_id TEXT NOT NULL REFERENCES intento(id),
+  oa_code    TEXT NOT NULL,
+  PRIMARY KEY (intento_id, oa_code)
+);
 
 -- Agregado por estudiante y OA que lee el panel docente. Nunca se consulta
 -- `intento` directamente desde el panel: se recalcula aqui despues de cada

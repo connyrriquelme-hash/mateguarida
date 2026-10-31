@@ -24,6 +24,14 @@ export const JUEGOS = {
     descripcion: "Reparte marraquetas y hallullas en bolsas iguales para practicar las tablas del 2, del 5 y del 10.",
     duracionMinutos: "2-4",
     ruta: "/juegos/guarida-reparte-los-panes/"
+  },
+  "guarida-completa-su-album": {
+    id: "guarida-completa-su-album",
+    nombre: "Guarida completa su álbum",
+    nivelPrincipal: "2-basico",
+    descripcion: "Suma y resta hasta 100 con sobres de 10 láminas y láminas sueltas, para completar el álbum.",
+    duracionMinutos: "2-4",
+    ruta: "/juegos/guarida-completa-su-album/"
   }
 };
 

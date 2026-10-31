@@ -17,6 +17,13 @@
         "alcance": "completo",
         "porQue": "El OA solo pide las tablas del 2, del 5 y del 10 como suma de sumandos iguales, con representacion concreta y pictorica: es exactamente lo que trabaja este juego (bolsas de panes, hasta 10 bolsas por tabla)."
       }
+    },
+    "guarida-completa-su-album": {
+      "2-basico": {
+        "oa": ["MA02-OA-09", "MA02-OA-06", "MA02-OA-07"],
+        "alcance": "parcial",
+        "porQue": "Cubre completo el OA7 (unidades y decenas 0-100: nivel 4, armar el numero con sobres y sueltas). De OA9, no cubre 'creando problemas matematicos y resolviendolos' (el nino resuelve, no inventa el problema). De OA6, las estrategias (completar 10, dobles) aparecen como pista en el apoyo, no como algo que el nino deba nombrar o elegir explicitamente."
+      }
     }
   }
 }
