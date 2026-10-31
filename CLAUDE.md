@@ -27,10 +27,21 @@ Dominio: **mateguarida.com** (comprado, en la cuenta de Cloudflare de Conny).
 - **AutoRAG** (Vectorize + Workers AI) para consultar el corpus.
 - La IA se usa **solo en el panel docente**, para generar **borradores** que
   Conny revisa y aprueba. **Los niños nunca interactúan con IA en vivo.**
-- **Entrada de estudiantes sin PIN**: el niño entra eligiendo su nombre de la
-  lista del curso. El código de curso se guarda en el dispositivo (lo escribe
-  la profesora una vez por tablet) y es lo que mantiene los nombres fuera de
+- **Entrada de estudiantes sin PIN, sin excepción**: tocar el nombre basta.
+  Se decidió así en la etapa 3 (no "desactivado por defecto": no existe en el
+  código). El código de curso se guarda en el dispositivo (lo escribe la
+  profesora una vez por tablet) y es lo que mantiene los nombres fuera de
   internet abierto.
+- **Dato mínimo del estudiante**: nombre e inicial del apellido. Nunca RUT,
+  fecha de nacimiento ni otro dato personal — ni en D1 ni en ningún juego.
+- **Panel docente (`/panel`, `/api/docente/*`) protegido con Cloudflare
+  Access** (verificación por correo a connyrriquelme@gmail.com), no con PIN
+  propio. El Worker valida una segunda vez la cabecera que pone Access
+  (`cloudflare/acceso.mjs`), como defensa en profundidad.
+- **Estudiantes se agrupan por mesa** (campo libre en `estudiante.mesa`); el
+  avance se puede ver por estudiante, por mesa y por OA.
+- **Carga de curso por lista pegada**: un nombre por línea; la inicial del
+  apellido se escribe al final de la línea ("Ana R."), se detecta sola.
 
 ## Dominio y despliegue
 
@@ -64,8 +75,17 @@ existen, bloquean el deploy del custom domain.
    estudiantes, juegos, asignaciones, intentos, avance por OA) y la pantalla de
    entrada adaptada de Lectoguarida. Desplegar una portada «Próximamente» en
    mateguarida.com para probar el dominio.
-3. **Panel docente** — crear curso, ingresar estudiantes, asignar juegos por
-   nivel, seguimiento por estudiante y por OA.
+3. **Panel docente** ✅ — crear curso, ingresar estudiantes (uno por uno o
+   pegando la lista), agrupar por mesa, ver avance por estudiante/mesa/OA.
+   "Asignar juegos por nivel" queda listo del lado de la base (`asignacion`)
+   pero sin UI real todavía: no hay ningún juego que asignar hasta la etapa 4.
+   **Pendiente que haga Conny, no automatizable desde aquí:** configurar
+   Cloudflare Access sobre `mateguarida.com/panel*` y
+   `mateguarida.com/api/docente*` (correo connyrriquelme@gmail.com) en
+   Zero Trust → Access → Applications. Sin esto, la segunda capa de
+   `cloudflare/acceso.mjs` ya bloquea `/panel` y `/api/docente/*` (devuelve
+   401 a cualquiera), pero Access es la protección real pensada para esto,
+   con su propia pantalla de login por correo.
 4. **Primer minijuego** — 2º Básico, conteo de 2 en 2, 5 en 5 y 10 en 10. De 2 a
    4 minutos, visual, con audio y botones grandes. Registra avance en D1.
    Sirve en tablet y pizarra digital.

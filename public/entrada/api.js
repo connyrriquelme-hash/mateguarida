@@ -68,8 +68,8 @@ export function crearApi({ fetchFn, almacen } = {}) {
     /** Valida un codigo (recien escrito, o el guardado) y trae curso + nombres. */
     cargarEntrada: (codigo) => llamar('/api/entrada', { metodo: 'POST', cuerpo: { codigo } }),
 
-    /** El estudiante entra eligiendo su nombre; `pin` solo si su perfil lo pide. */
-    entrar: (idEstudiante, pin) =>
-      llamar(`/api/estudiantes/${encodeURIComponent(idEstudiante)}/entrar`, { metodo: 'POST', cuerpo: { pin } })
+    /** El estudiante entra solo eligiendo su nombre. Sin PIN. */
+    entrar: (idEstudiante) =>
+      llamar(`/api/estudiantes/${encodeURIComponent(idEstudiante)}/entrar`, { metodo: 'POST', cuerpo: {} })
   };
 }

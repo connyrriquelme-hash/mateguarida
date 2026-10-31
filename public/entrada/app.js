@@ -1,13 +1,13 @@
 /**
  * app.js
  * Entrada de Mateguarida para los estudiantes. Adaptado de Lectoguarida
- * (public/app.js): mismo flujo, sin PIN para el niño salvo que la profesora
- * le haya puesto uno.
+ * (public/app.js): codigo de curso, tocar el nombre, jugar. Sin PIN.
  *
  * Flujo:
  *   1. codigo del curso (una vez por dispositivo, queda en localStorage)
- *   2. rejilla con los nombres del curso -> toca su nombre (o pone su PIN,
- *      si su perfil tiene uno)
+ *   2. rejilla con los nombres del curso -> toca su nombre -> entra
+ *      (sin PIN: se quito en la etapa 3, un nino peleando con un PIN antes
+ *      de jugar era friccion que no aportaba nada)
  *   3. por ahora: "Muy pronto" (todavia no existen juegos; eso es la etapa 4)
  *
  * Todo el texto llega al DOM con textContent, nunca con innerHTML: los
@@ -102,7 +102,7 @@ export function iniciar(raiz, deps = {}) {
         h(doc, 'li', {},
           h(doc, 'button', { class: 'nombre', type: 'button', 'data-color': i % 6, onclick: () => elegirNino(e) },
             h(doc, 'span', { class: 'nombre-inicial', 'aria-hidden': 'true', texto: (e.nombre[0] || '?').toLocaleUpperCase('es-CL') }),
-            h(doc, 'span', { class: 'nombre-texto', texto: e.nombre })))))
+            h(doc, 'span', { class: 'nombre-texto', texto: e.inicialApellido ? `${e.nombre} ${e.inicialApellido}.` : e.nombre })))))
       : h(doc, 'p', { class: 'texto vacio', texto: 'Todavía no hay nombres en este curso. Pídele a tu profesora que los agregue.' });
 
     mostrar('nombres', h(doc, 'section', { class: 'pantalla' },
@@ -113,50 +113,17 @@ export function iniciar(raiz, deps = {}) {
       cuerpo));
   }
 
-  function pedirPin(estudiante) {
-    const campo = h(doc, 'input', {
-      id: 'pin', name: 'pin', type: 'password', inputmode: 'numeric', pattern: '[0-9]*',
-      maxlength: '6', autocomplete: 'off', enterkeyhint: 'go', required: true, placeholder: 'PIN'
-    });
-    const aviso = h(doc, 'p', { class: 'error', role: 'alert', 'data-error': '' });
-    const boton = h(doc, 'button', { class: 'boton', type: 'submit', texto: 'Entrar' });
-    const formulario = h(doc, 'form', { class: 'formulario', novalidate: true },
-      h(doc, 'label', { for: 'pin', class: 'etiqueta', texto: 'Tu PIN' }), campo, aviso, boton);
-
-    formulario.addEventListener('submit', async (evento) => {
-      evento.preventDefault();
-      boton.disabled = true;
-      try {
-        await entrarComo(estudiante, campo.value);
-      } catch (error) {
-        boton.disabled = false;
-        aviso.textContent = error instanceof ErrorApi && error.estado === 401
-          ? 'PIN incorrecto. Intenta otra vez con calma.'
-          : 'No pudimos conectarnos. Revisa el internet e inténtalo de nuevo.';
-        campo.value = '';
-        campo.focus();
-      }
-    });
-
-    mostrar('pin', h(doc, 'section', { class: 'pantalla pantalla--angosta' },
-      h(doc, 'h1', { class: 'titulo', texto: `Hola, ${estudiante.nombre}`, tabindex: '-1', 'data-foco': '' }),
-      h(doc, 'p', { class: 'texto', texto: 'Escribe tu PIN.' }),
-      formulario,
-      h(doc, 'button', { class: 'boton boton--claro', type: 'button', texto: '← No soy yo', onclick: pantallaNombres })));
-  }
-
-  async function entrarComo(estudiante, pin) {
-    const sesion = await api.entrar(estudiante.id, pin);
+  async function entrarComo(estudiante) {
+    const sesion = await api.entrar(estudiante.id);
     estado.nino = { id: sesion.estudiante.id, nombre: sesion.estudiante.nombre };
     pantallaProximamente();
   }
 
   async function elegirNino(estudiante) {
-    if (estudiante.tienePin) { pedirPin(estudiante); return; }
     const aviso = raiz.querySelector('[data-error]');
     raiz.querySelectorAll('.nombre').forEach((b) => { b.disabled = true; });
     try {
-      await entrarComo(estudiante, undefined);
+      await entrarComo(estudiante);
     } catch (error) {
       if (error instanceof ErrorApi && error.estado === 401) {
         api.olvidarCodigo();

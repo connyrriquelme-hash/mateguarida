@@ -4,18 +4,62 @@
  * los archivos estaticos de /public (binding ASSETS, ver wrangler.jsonc:
  * run_worker_first hace que este archivo vea CADA request primero).
  *
- * Etapa 2: solo existe la API de entrada (codigo de curso -> nombres ->
- * elegir nombre). El panel docente (crear curso, ingresar estudiantes,
- * asignar juegos, ver avance) es la etapa 3.
+ * /panel y /api/docente/* estan protegidas por Cloudflare Access (se
+ * configura en el panel de Cloudflare, no aqui) + una segunda validacion en
+ * este archivo (cloudflare/acceso.mjs), para quien no sea
+ * connyrriquelme@gmail.com.
  */
 
 import { manejarEntrada, manejarEntrarEstudiante } from "./curso.mjs";
+import { obtenerDocente, respuestaNoAutorizado } from "./acceso.mjs";
+import {
+  listarCursos, crearCurso, obtenerCurso, actualizarCurso, eliminarCurso,
+  agregarEstudiantes, actualizarEstudiante, eliminarEstudiante, obtenerAvance
+} from "./docente.mjs";
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "content-type": "application/json; charset=utf-8" }
   });
+}
+
+async function manejarDocente(request, env, pathname) {
+  if (!obtenerDocente(request, env)) return respuestaNoAutorizado();
+
+  const { method } = request;
+
+  if (pathname === "/api/docente/cursos") {
+    if (method === "GET") return listarCursos(env);
+    if (method === "POST") return crearCurso(request, env);
+  }
+
+  const matchCurso = pathname.match(/^\/api\/docente\/cursos\/([^/]+)$/);
+  if (matchCurso) {
+    const id = decodeURIComponent(matchCurso[1]);
+    if (method === "GET") return obtenerCurso(env, id);
+    if (method === "PATCH") return actualizarCurso(request, env, id);
+    if (method === "DELETE") return eliminarCurso(env, id);
+  }
+
+  const matchEstudiantesCurso = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/estudiantes$/);
+  if (matchEstudiantesCurso && method === "POST") {
+    return agregarEstudiantes(request, env, decodeURIComponent(matchEstudiantesCurso[1]));
+  }
+
+  const matchAvance = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/avance$/);
+  if (matchAvance && method === "GET") {
+    return obtenerAvance(env, decodeURIComponent(matchAvance[1]));
+  }
+
+  const matchEstudiante = pathname.match(/^\/api\/docente\/estudiantes\/([^/]+)$/);
+  if (matchEstudiante) {
+    const id = decodeURIComponent(matchEstudiante[1]);
+    if (method === "PATCH") return actualizarEstudiante(request, env, id);
+    if (method === "DELETE") return eliminarEstudiante(env, id);
+  }
+
+  return json({ error: "No encontrado." }, 404);
 }
 
 export default {
@@ -34,6 +78,16 @@ export default {
     const matchEntrar = pathname.match(/^\/api\/estudiantes\/([^/]+)\/entrar$/);
     if (matchEntrar && request.method === "POST") {
       return manejarEntrarEstudiante(request, env, decodeURIComponent(matchEntrar[1]));
+    }
+
+    if (pathname.startsWith("/api/docente/")) {
+      return manejarDocente(request, env, pathname);
+    }
+
+    // Segunda capa tambien para los archivos estaticos del panel: si Access
+    // fallara, esto igual corta el paso antes de servir /panel/*.
+    if (pathname.startsWith("/panel") && !obtenerDocente(request, env)) {
+      return respuestaNoAutorizado();
     }
 
     if (pathname.startsWith("/api/")) {

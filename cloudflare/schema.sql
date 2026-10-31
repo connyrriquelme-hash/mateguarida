@@ -14,7 +14,16 @@
 --
 -- Privacidad: ninguna tabla guarda audio, voz, IP ni huella de navegador. El
 -- vinculo entre estudiante.id y el nombre real vive solo en la tabla
--- estudiante, que solo lee el panel docente autenticado.
+-- estudiante, que solo lee el panel docente autenticado. El dato del
+-- estudiante es minimo a proposito: nombre e inicial del apellido. Nada de
+-- RUT, fecha de nacimiento ni otro dato personal.
+--
+-- Entrada sin PIN: tocar el nombre basta, no hay PIN de estudiante (se quito
+-- en la etapa 3; vivio brevemente en pin_salt/pin_hash, ver
+-- cloudflare/migrations/0001_panel_docente.sql para la base que ya lo tenia
+-- desplegado). El panel docente (/panel, /api/docente/*) se protege con
+-- Cloudflare Access, no con una sesion propia -- por eso ya no existe una
+-- tabla sesion_docente.
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS curso (
@@ -31,19 +40,20 @@ CREATE TABLE IF NOT EXISTS curso (
 );
 
 CREATE TABLE IF NOT EXISTS estudiante (
-  id         TEXT PRIMARY KEY,
-  curso_id   TEXT NOT NULL REFERENCES curso(id),
-  nombre     TEXT NOT NULL CHECK (length(nombre) BETWEEN 1 AND 60),
-  -- Igual que Lectoguarida: un perfil sin PIN entra solo eligiendo su nombre.
-  -- La profesora le pone PIN desde el panel a quien lo necesite.
-  pin_salt   TEXT,
-  pin_hash   TEXT,
-  activo     INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  id               TEXT PRIMARY KEY,
+  curso_id         TEXT NOT NULL REFERENCES curso(id),
+  nombre           TEXT NOT NULL CHECK (length(nombre) BETWEEN 1 AND 60),
+  -- Solo la inicial, nunca el apellido completo (dato minimo).
+  inicial_apellido TEXT CHECK (inicial_apellido IS NULL OR length(inicial_apellido) <= 4),
+  -- Agrupacion libre que define la profesora (mesa, grupo, fila...).
+  mesa             TEXT CHECK (mesa IS NULL OR length(mesa) <= 30),
+  activo           INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
+  created_at       TEXT NOT NULL,
+  updated_at       TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_estudiante_curso ON estudiante(curso_id, activo);
+CREATE INDEX IF NOT EXISTS idx_estudiante_mesa ON estudiante(curso_id, mesa);
 
 -- Que juego (id estatico, definido en el codigo del Worker/cliente, no en D1 -
 -- mismo patron que Lectoguarida: los juegos son contenido versionado, no
@@ -58,14 +68,9 @@ CREATE TABLE IF NOT EXISTS asignacion (
 
 CREATE INDEX IF NOT EXISTS idx_asignacion_curso ON asignacion(curso_id);
 
--- Sesiones (igual patron que Lectoguarida: token -> expiracion).
-CREATE TABLE IF NOT EXISTS sesion_docente (
-  token      TEXT PRIMARY KEY,
-  expires_at TEXT NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_sesion_docente_expira ON sesion_docente(expires_at);
-
+-- Sesion del estudiante (igual patron que Lectoguarida: token -> expiracion).
+-- No existe una tabla equivalente para el docente: Cloudflare Access es su
+-- sesion (cookie propia de Access, fuera de esta base).
 CREATE TABLE IF NOT EXISTS sesion_estudiante (
   token         TEXT PRIMARY KEY,
   estudiante_id TEXT NOT NULL,
