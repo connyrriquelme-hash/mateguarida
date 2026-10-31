@@ -1,0 +1,342 @@
+{
+  "version": "1.0.0",
+  "generado": "2026-10-30",
+  "description": "Habilidades de Matematica (transversales a los ejes: Resolver problemas, Argumentar y comunicar, Modelar, Representar), copiadas literalmente de las Bases Curriculares 1-6 basico. Viven separadas de data/oa.json porque no tienen un eje propio (son transversales a Numeros y Operaciones, Patrones y Algebra, Geometria, Medicion y Datos y Probabilidades). codigo usa el patron MAnn-OAH-<letra> (OAH = Objetivo de Aprendizaje de Habilidad), para no confundirse con los codigos de contenido MAnn-OA-nn de data/oa.json. Transicion (NT1/NT2) no tiene una lista separada de habilidades en este formato en las Bases de Parvularia -sus habilidades van integradas en el texto de cada OA de Pensamiento Matematico-, por eso no aparece aqui. Las vinetas internas de una misma habilidad van separadas por ' • '.",
+  "fuente": {
+    "documento": "Bases Curriculares 1º a 6º Basico (reedicion 2024). Matematica, Objetivos de Aprendizaje de Habilidades, paginas 226, 230, 234, 240.",
+    "url": "https://www.curriculumnacional.cl/sites/default/files/newtenberg/614/articles-22394_bases.pdf",
+    "archivo_local": "corpus/bases-curriculares-1-6-basico.pdf",
+    "consultado": "2026-10-30"
+  },
+  "habilidades": [
+    {
+      "codigo": "MA01-OAH-a",
+      "nivel": "1-basico",
+      "letra": "a",
+      "categoria": "Resolver problemas",
+      "texto": "Emplear diversas estrategias para resolver problemas."
+    },
+    {
+      "codigo": "MA01-OAH-b",
+      "nivel": "1-basico",
+      "letra": "b",
+      "categoria": "Resolver problemas",
+      "texto": "Comprobar enunciados, usando material concreto y gráfico."
+    },
+    {
+      "codigo": "MA01-OAH-c",
+      "nivel": "1-basico",
+      "letra": "c",
+      "categoria": "Resolver problemas",
+      "texto": "Expresar un problema con sus propias palabras."
+    },
+    {
+      "codigo": "MA01-OAH-d",
+      "nivel": "1-basico",
+      "letra": "d",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Describir situaciones del entorno con lenguaje matemático."
+    },
+    {
+      "codigo": "MA01-OAH-e",
+      "nivel": "1-basico",
+      "letra": "e",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Comunicar el resultado de descubrimientos de relaciones, patrones y reglas, entre otros, empleando expresiones matemáticas."
+    },
+    {
+      "codigo": "MA01-OAH-f",
+      "nivel": "1-basico",
+      "letra": "f",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Explicar las soluciones propias y los procedimientos utilizados."
+    },
+    {
+      "codigo": "MA01-OAH-g",
+      "nivel": "1-basico",
+      "letra": "g",
+      "categoria": "Modelar",
+      "texto": "Aplicar modelos que involucren sumas, restas y orden de cantidades."
+    },
+    {
+      "codigo": "MA01-OAH-h",
+      "nivel": "1-basico",
+      "letra": "h",
+      "categoria": "Modelar",
+      "texto": "Expresar, a partir de representaciones pictóricas y explicaciones dadas, acciones y situaciones cotidianas en lenguaje matemático."
+    },
+    {
+      "codigo": "MA01-OAH-i",
+      "nivel": "1-basico",
+      "letra": "i",
+      "categoria": "Representar",
+      "texto": "Elegir y utilizar representaciones concretas, pictóricas y simbólicas para representar enunciados."
+    },
+    {
+      "codigo": "MA01-OAH-j",
+      "nivel": "1-basico",
+      "letra": "j",
+      "categoria": "Representar",
+      "texto": "Crear un relato basado en una expresión matemática simple."
+    },
+    {
+      "codigo": "MA02-OAH-a",
+      "nivel": "2-basico",
+      "letra": "a",
+      "categoria": "Resolver problemas",
+      "texto": "Emplear diversas estrategias para resolver problemas: • por medio de ensayo y error • aplicando conocimientos adquiridos"
+    },
+    {
+      "codigo": "MA02-OAH-b",
+      "nivel": "2-basico",
+      "letra": "b",
+      "categoria": "Resolver problemas",
+      "texto": "Comprobar enunciados, usando material concreto y gráfico."
+    },
+    {
+      "codigo": "MA02-OAH-c",
+      "nivel": "2-basico",
+      "letra": "c",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Describir situaciones de la realidad con lenguaje matemático."
+    },
+    {
+      "codigo": "MA02-OAH-d",
+      "nivel": "2-basico",
+      "letra": "d",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Comunicar el resultado de descubrimientos de relaciones, patrones y reglas, entre otros, empleando expresiones matemáticas."
+    },
+    {
+      "codigo": "MA02-OAH-e",
+      "nivel": "2-basico",
+      "letra": "e",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Explicar las soluciones propias y los procedimientos utilizados."
+    },
+    {
+      "codigo": "MA02-OAH-f",
+      "nivel": "2-basico",
+      "letra": "f",
+      "categoria": "Modelar",
+      "texto": "Aplicar y seleccionar modelos que involucren sumas, restas y orden de cantidades."
+    },
+    {
+      "codigo": "MA02-OAH-g",
+      "nivel": "2-basico",
+      "letra": "g",
+      "categoria": "Modelar",
+      "texto": "Expresar, a partir de representaciones pictóricas y explicaciones dadas, acciones y situaciones cotidianas en lenguaje matemático."
+    },
+    {
+      "codigo": "MA02-OAH-h",
+      "nivel": "2-basico",
+      "letra": "h",
+      "categoria": "Representar",
+      "texto": "Elegir y utilizar representaciones concretas, pictóricas y simbólicas para representar enunciados."
+    },
+    {
+      "codigo": "MA02-OAH-i",
+      "nivel": "2-basico",
+      "letra": "i",
+      "categoria": "Representar",
+      "texto": "Crear un relato basado en una expresión matemática simple."
+    },
+    {
+      "codigo": "MA03-OAH-a",
+      "nivel": "3-basico",
+      "letra": "a",
+      "categoria": "Resolver problemas",
+      "texto": "Resolver problemas dados o creados."
+    },
+    {
+      "codigo": "MA03-OAH-b",
+      "nivel": "3-basico",
+      "letra": "b",
+      "categoria": "Resolver problemas",
+      "texto": "Emplear diversas estrategias para resolver problemas y alcanzar respuestas adecuadas, como la estrategia de los 4 pasos: entender, planificar, hacer y comprobar."
+    },
+    {
+      "codigo": "MA03-OAH-c",
+      "nivel": "3-basico",
+      "letra": "c",
+      "categoria": "Resolver problemas",
+      "texto": "Transferir los procedimientos utilizados en situaciones ya resueltas a problemas similares."
+    },
+    {
+      "codigo": "MA03-OAH-d",
+      "nivel": "3-basico",
+      "letra": "d",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Formular preguntas para profundizar el conocimiento y la comprensión."
+    },
+    {
+      "codigo": "MA03-OAH-e",
+      "nivel": "3-basico",
+      "letra": "e",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Descubrir regularidades matemáticas –la estructura de las operaciones inversas, el valor posicional en el sistema decimal, patrones como los múltiplos– y comunicarlas a otros."
+    },
+    {
+      "codigo": "MA03-OAH-f",
+      "nivel": "3-basico",
+      "letra": "f",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Hacer deducciones matemáticas de manera concreta."
+    },
+    {
+      "codigo": "MA03-OAH-g",
+      "nivel": "3-basico",
+      "letra": "g",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Describir una situación del entorno con una expresión matemática, con una ecuación o con una representación pictórica."
+    },
+    {
+      "codigo": "MA03-OAH-h",
+      "nivel": "3-basico",
+      "letra": "h",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Escuchar el razonamiento de otros para enriquecerse y para corregir errores."
+    },
+    {
+      "codigo": "MA03-OAH-i",
+      "nivel": "3-basico",
+      "letra": "i",
+      "categoria": "Modelar",
+      "texto": "Aplicar, seleccionar y evaluar modelos que involucren las cuatro operaciones y la ubicación en la recta numérica y en el plano."
+    },
+    {
+      "codigo": "MA03-OAH-j",
+      "nivel": "3-basico",
+      "letra": "j",
+      "categoria": "Modelar",
+      "texto": "Expresar, a partir de representaciones pictóricas y explicaciones dadas, acciones y situaciones cotidianas en lenguaje matemático."
+    },
+    {
+      "codigo": "MA03-OAH-k",
+      "nivel": "3-basico",
+      "letra": "k",
+      "categoria": "Modelar",
+      "texto": "Identificar regularidades en expresiones numéricas y geométricas."
+    },
+    {
+      "codigo": "MA03-OAH-l",
+      "nivel": "3-basico",
+      "letra": "l",
+      "categoria": "Representar",
+      "texto": "Utilizar formas de representación adecuadas, como esquemas y tablas, con un lenguaje técnico específico y con los símbolos matemáticos correctos."
+    },
+    {
+      "codigo": "MA03-OAH-m",
+      "nivel": "3-basico",
+      "letra": "m",
+      "categoria": "Representar",
+      "texto": "Crear un problema real a partir de una expresión matemática, una ecuación o una representación."
+    },
+    {
+      "codigo": "MA03-OAH-n",
+      "nivel": "3-basico",
+      "letra": "n",
+      "categoria": "Representar",
+      "texto": "Transferir una situación de un nivel de representación a otro (por ejemplo: de lo concreto a lo pictórico y de lo pictórico a lo simbólico, y viceversa)."
+    },
+    {
+      "codigo": "MA04-OAH-a",
+      "nivel": "4-basico",
+      "letra": "a",
+      "categoria": "Resolver problemas",
+      "texto": "Resolver problemas dados o creados."
+    },
+    {
+      "codigo": "MA04-OAH-b",
+      "nivel": "4-basico",
+      "letra": "b",
+      "categoria": "Resolver problemas",
+      "texto": "Emplear diversas estrategias para resolver problemas y alcanzar respuestas adecuadas, como la estrategia de los 4 pasos: entender, planificar, hacer y comprobar."
+    },
+    {
+      "codigo": "MA04-OAH-c",
+      "nivel": "4-basico",
+      "letra": "c",
+      "categoria": "Resolver problemas",
+      "texto": "Transferir los procedimientos utilizados en situaciones ya resueltas a problemas similares."
+    },
+    {
+      "codigo": "MA04-OAH-d",
+      "nivel": "4-basico",
+      "letra": "d",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Formular preguntas para profundizar el conocimiento y la comprensión."
+    },
+    {
+      "codigo": "MA04-OAH-e",
+      "nivel": "4-basico",
+      "letra": "e",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Descubrir regularidades matemáticas –la estructura de las operaciones inversas, el valor posicional en el sistema decimal, patrones como los múltiplos– y comunicarlas a otros."
+    },
+    {
+      "codigo": "MA04-OAH-f",
+      "nivel": "4-basico",
+      "letra": "f",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Hacer deducciones matemáticas."
+    },
+    {
+      "codigo": "MA04-OAH-g",
+      "nivel": "4-basico",
+      "letra": "g",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Comprobar una solución y fundamentar su razonamiento."
+    },
+    {
+      "codigo": "MA04-OAH-h",
+      "nivel": "4-basico",
+      "letra": "h",
+      "categoria": "Argumentar y comunicar",
+      "texto": "Escuchar el razonamiento de otros para enriquecerse y para corregir errores."
+    },
+    {
+      "codigo": "MA04-OAH-i",
+      "nivel": "4-basico",
+      "letra": "i",
+      "categoria": "Modelar",
+      "texto": "Aplicar, seleccionar, modificar y evaluar modelos que involucren las cuatro operaciones con números naturales y fracciones, la ubicación en la recta numérica y en el plano, y el análisis de datos."
+    },
+    {
+      "codigo": "MA04-OAH-j",
+      "nivel": "4-basico",
+      "letra": "j",
+      "categoria": "Modelar",
+      "texto": "Expresar, a partir de representaciones pictóricas y explicaciones dadas, acciones y situaciones cotidianas en lenguaje matemático."
+    },
+    {
+      "codigo": "MA04-OAH-k",
+      "nivel": "4-basico",
+      "letra": "k",
+      "categoria": "Modelar",
+      "texto": "Identificar regularidades en expresiones numéricas y geométricas."
+    },
+    {
+      "codigo": "MA04-OAH-l",
+      "nivel": "4-basico",
+      "letra": "l",
+      "categoria": "Representar",
+      "texto": "Utilizar formas de representación adecuadas, como esquemas y tablas, con un lenguaje técnico específico y con los símbolos matemáticos correctos."
+    },
+    {
+      "codigo": "MA04-OAH-m",
+      "nivel": "4-basico",
+      "letra": "m",
+      "categoria": "Representar",
+      "texto": "Crear un problema real a partir de una expresión matemática, una ecuación o una representación."
+    },
+    {
+      "codigo": "MA04-OAH-n",
+      "nivel": "4-basico",
+      "letra": "n",
+      "categoria": "Representar",
+      "texto": "Transferir una situación de un nivel de representación a otro (por ejemplo: de lo concreto a lo pictórico y de lo pictórico a lo simbólico, y viceversa)."
+    }
+  ]
+}

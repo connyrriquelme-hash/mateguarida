@@ -71,6 +71,18 @@ existen, bloquean el deploy del custom domain.
    Sirve en tablet y pizarra digital.
 5. **RAG** — subir `/corpus` a R2, guiar paso a paso la creación de la instancia
    de AutoRAG en el panel de Cloudflare y conectarla al Worker.
+   **Pendiente a resolver en esta etapa:** los Programas de Estudio de
+   Matemática 1º-3º básico (`corpus/programa-matematica-{1,2,3}-basico.pdf`)
+   tienen, en sus páginas 24-25/53-54, un recuadro de ejemplo («Estructura del
+   programa de estudio») que reutiliza como ilustración el contenido de **4º
+   básico** (con su propio pie de página "Programa de Estudio / 4º básico"
+   dentro del PDF de otro nivel; ver `corpus/FUENTES.md`). Si esas páginas se
+   indexan tal cual, el RAG puede devolver contenido de 4º básico citado como
+   si fuera de 1º-3º. Antes de indexar: (a) cada fragmento subido a R2/AutoRAG
+   debe llevar el nivel correcto como metadato explícito (no inferido del
+   nombre del archivo), y (b) esas páginas de ejemplo concretas deben
+   excluirse del corpus indexado, o quedar etiquetadas con metadato
+   `nivel: 4-basico` en vez del nivel del archivo que las contiene.
 6. **Generador de clases** — dado un OA, propone una clase (inicio, juego,
    cierre, ticket de salida) basada en el corpus, con referencia a Sumo Primero,
    guardada como borrador editable.
