@@ -22,16 +22,11 @@
     }
   ],
   "vars": {
-    // Datos publicos de la aplicacion de Cloudflare Access (no son secretos:
-    // ambos van dentro del propio JWT). cloudflare/acceso.mjs los usa para
-    // verificar la firma, el emisor y la audiencia del JWT de Access.
-    // PENDIENTE: reemplazar con los valores reales de Zero Trust -> Access ->
-    // Applications -> "Mateguarida — Panel docente" -> Overview. Con estos
-    // valores de relleno, acceso.mjs rechaza todo /panel y /api/docente/*
-    // a proposito (ACCESS_TEAM_DOMAIN/ACCESS_AUD_TAG vacios => obtenerDocente
-    // devuelve null), en vez de validar contra un dominio o audiencia que no
-    // corresponden.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD_TAG": ""
+    // Datos publicos de la aplicacion de Cloudflare Access "Mateguarida —
+    // Panel docente" (Zero Trust -> Access -> Applications -> Overview). No
+    // son secretos: ambos van dentro del propio JWT. cloudflare/acceso.mjs
+    // los usa para verificar la firma, el emisor y la audiencia del JWT.
+    "ACCESS_TEAM_DOMAIN": "misty-cell-8e47.cloudflareaccess.com",
+    "ACCESS_AUD_TAG": "da770e01d3736f809476a4d9c61a33a8dc5739dc5f124d251493b75b8bc9ea72"
   }
 }
