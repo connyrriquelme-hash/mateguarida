@@ -10,6 +10,7 @@
 
 export const CLAVE_CODIGO = 'mg_codigo_curso';
 export const CLAVE_TOKEN = 'mg_token_estudiante';
+export const CLAVE_NIVEL = 'mg_nivel_curso';
 
 export class ErrorApi extends Error {
   constructor(mensaje, estado) {
@@ -67,6 +68,9 @@ export function crearApi({ fetchFn, almacen } = {}) {
 
     /** El token de sesion del estudiante, para que el juego lo use al enviar su resultado. */
     guardarToken: (t) => guardado.set(CLAVE_TOKEN, t),
+
+    /** Nivel curricular del curso (ej. "2-basico"), para que el juego elija su niveles.json. */
+    guardarNivel: (n) => guardado.set(CLAVE_NIVEL, n),
 
     /** Valida un codigo (recien escrito, o el guardado) y trae curso + nombres + juegos asignados. */
     cargarEntrada: (codigo) => llamar('/api/entrada', { metodo: 'POST', cuerpo: { codigo } }),

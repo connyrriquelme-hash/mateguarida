@@ -1,0 +1,7 @@
+{
+  "_comentario": "Una fila por nivel curricular (curso.nivel). 'maxBolsasPorDificultad' tiene 4 valores, uno por cada nivel de dificultad DENTRO de la partida (1-4, el que sube/baja solo); no confundir con el nivel curricular, que es la clave de este objeto.",
+  "2-basico": {
+    "tablas": ["2", "5", "10"],
+    "maxBolsasPorDificultad": [5, 10, 10, 10]
+  }
+}

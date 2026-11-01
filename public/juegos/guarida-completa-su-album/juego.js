@@ -31,17 +31,24 @@
  *
  * Voz: igual que los otros dos juegos -- speechSynthesis (es-CL), aviso
  * discreto si el aparato no tiene voz en español, y boton para repetirla.
+ *
+ * Hasta donde llegar (techo) y los rangos de cada variante varian por nivel
+ * CURRICULAR (1-basico llega solo a 20, 3-basico y 4-basico a 1000): eso
+ * vive en niveles.json, una fila por nivel, para no duplicar este archivo.
+ * El nivel curricular del estudiante se guarda en localStorage al entrar
+ * (ver entrada/app.js).
  */
 
 import { h } from '../../entrada/dom.js';
 import { gatoSVG } from '../../entrada/mascota.js';
 import { sobreSVG, laminaSVG, laminaRepetidaSVG } from './lamina.js';
-import { CLAVE_TOKEN } from '../../entrada/api.js';
+import { CLAVE_TOKEN, CLAVE_NIVEL } from '../../entrada/api.js';
 import { decir, hayVozEspanol } from '../../entrada/voz.js';
 
 const TOTAL_RONDAS = 9;
 const RONDAS_PARA_SUBIR = 2;
 const RONDAS_PARA_BAJAR = 2;
+const NIVEL_POR_DEFECTO = '2-basico'; // si falta el dato (sesion vieja) o el nivel no tiene fila en niveles.json todavia
 
 /* ------------------------------ utilidades -------------------------------- */
 
@@ -86,28 +93,21 @@ function crearValorUnico() {
 
 /* --------------------------- generar una ronda ---------------------------- */
 
-function generarDirecto(numero, nivel, tipo) {
-  let a; let b;
-  if (nivel === 1) {
-    a = entero(1, 6) * 10; // 10-50
-    b = entero(1, 6) * 10; // 10-50
-  } else if (nivel === 2) {
-    a = entero(1, 20) * 5; // 5-95
-    b = entero(1, 20) * 5;
-  } else {
-    a = entero(5, 96); // 5-95
-    b = entero(1, 51); // 1-50
-  }
+function generarDirecto(numero, nivel, tipo, config) {
+  const { techo } = config;
+  const r = config.rangoPorDificultad[nivel - 1];
+  let a = entero(r.aMin, r.aMaxExclusivo) * r.aMultiplo;
+  let b = entero(r.bMin, r.bMaxExclusivo) * r.bMultiplo;
 
   let correcto;
   if (tipo === 'juntar') {
     // clamp directo, no division: dividir a la mitad puede quedar pegado en
-    // b=1 cuando a ya esta muy cerca de 100 (ej. a=100 en nivel 2).
-    if (a + b > 100) b = Math.max(1, 100 - a);
+    // b=1 cuando a ya esta muy cerca del techo (ej. a=100 en nivel 2 de 2-basico).
+    if (a + b > techo) b = Math.max(1, techo - a);
     correcto = a + b;
   } else {
     if (b > a) { const t = a; a = b; b = t; }
-    if (a === b) a = Math.min(100, a + 5);
+    if (a === b) a = Math.min(techo, a + 5);
     correcto = a - b;
   }
 
@@ -124,12 +124,14 @@ function generarDirecto(numero, nivel, tipo) {
   return { numero, modo: tipo, nivel, a, b, correcto, opciones };
 }
 
-function generarDosPasos(numero, nivel) {
-  const a = entero(5, 41);
-  let b = entero(5, 31);
-  if (a + b > 100) b = 100 - a;
+function generarDosPasos(numero, nivel, config) {
+  const { techo } = config;
+  const { aMin, aMaxExclusivo, bMin, bMaxExclusivo, cMaxTope } = config.dosPasos;
+  const a = entero(aMin, aMaxExclusivo);
+  let b = entero(bMin, bMaxExclusivo);
+  if (a + b > techo) b = techo - a;
   const intermedio = a + b;
-  const c = entero(1, Math.min(intermedio, 30) + 1);
+  const c = entero(1, Math.min(intermedio, cMaxTope) + 1);
   const correcto = intermedio - c;
 
   const valorUnico = crearValorUnico();
@@ -144,8 +146,9 @@ function generarDosPasos(numero, nivel) {
   return { numero, modo: 'dos_pasos', nivel, a, b, c, intermedio, correcto, opciones };
 }
 
-function generarIntercambio(numero, nivel) {
-  const repetidas = entero(3, 16);
+function generarIntercambio(numero, nivel, config) {
+  const { repetidasMin, repetidasMaxExclusivo } = config.intercambio;
+  const repetidas = entero(repetidasMin, repetidasMaxExclusivo);
   const intercambia = entero(1, repetidas + 1);
   const correcto = repetidas - intercambia;
 
@@ -161,10 +164,11 @@ function generarIntercambio(numero, nivel) {
   return { numero, modo: 'intercambio', nivel, repetidas, intercambia, correcto, opciones };
 }
 
-function generarArmaNumero(numero, nivel) {
-  const total = entero(10, 101);
-  const sobresReal = Math.floor(total / 10);
-  const sueltasReal = total % 10;
+function generarArmaNumero(numero, nivel, config) {
+  const { totalMin, totalMaxExclusivo, tamanoSobre } = config.armaNumero;
+  const total = entero(totalMin, totalMaxExclusivo);
+  const sobresReal = Math.floor(total / tamanoSobre);
+  const sueltasReal = total % tamanoSobre;
   const pregunta = elegir(['sobres', 'sueltas']);
   const correcto = pregunta === 'sobres' ? sobresReal : sueltasReal;
   const otroValor = pregunta === 'sobres' ? sueltasReal : sobresReal;
@@ -181,12 +185,12 @@ function generarArmaNumero(numero, nivel) {
   return { numero, modo: 'arma_numero', nivel, total, sobresReal, sueltasReal, pregunta, correcto, opciones };
 }
 
-function generarRonda(numero, nivel, tipoBase) {
-  if (nivel < 4) return generarDirecto(numero, nivel, tipoBase);
+function generarRonda(numero, nivel, tipoBase, config) {
+  if (nivel < 4) return generarDirecto(numero, nivel, tipoBase, config);
   const variante4 = elegir(['arma_numero', 'dos_pasos', 'intercambio']);
-  if (variante4 === 'arma_numero') return generarArmaNumero(numero, nivel);
-  if (variante4 === 'dos_pasos') return generarDosPasos(numero, nivel);
-  return generarIntercambio(numero, nivel);
+  if (variante4 === 'arma_numero') return generarArmaNumero(numero, nivel, config);
+  if (variante4 === 'dos_pasos') return generarDosPasos(numero, nivel, config);
+  return generarIntercambio(numero, nivel, config);
 }
 
 function generarSecuenciaDeTipos() {
@@ -197,10 +201,36 @@ function generarSecuenciaDeTipos() {
 
 /* --------------------------------- juego ---------------------------------- */
 
-export function iniciarJuego(raiz, deps = {}) {
+export async function iniciarJuego(raiz, deps = {}) {
   const doc = raiz.ownerDocument;
   const almacen = deps.almacen || window.localStorage;
   const enviar = deps.enviar || ((...args) => fetch(...args));
+  const pedirConfig = deps.pedirConfig || ((...args) => fetch(...args));
+
+  function obtenerNivelCurricular() {
+    try { return almacen.getItem(CLAVE_NIVEL) || NIVEL_POR_DEFECTO; } catch { return NIVEL_POR_DEFECTO; }
+  }
+
+  let todosLosNiveles = {};
+  try {
+    const respuesta = await pedirConfig('./niveles.json');
+    todosLosNiveles = await respuesta.json();
+  } catch {
+    // Sin internet o archivo no disponible: se sigue con el nivel por
+    // defecto mas abajo, el juego no se rompe por esto.
+  }
+  const config = todosLosNiveles[obtenerNivelCurricular()] || todosLosNiveles[NIVEL_POR_DEFECTO];
+  if (!config) {
+    // Sin internet y sin cache: no hay de donde sacar rangos. Se avisa en
+    // vez de romper el juego con una excepcion.
+    raiz.textContent = '';
+    raiz.append(h(doc, 'section', { class: 'pantalla' },
+      h(doc, 'h1', { class: 'titulo', texto: 'No pudimos cargar el juego', tabindex: '-1', 'data-foco': '' }),
+      h(doc, 'p', { class: 'texto', texto: 'Revisa tu conexión a internet e inténtalo de nuevo.' }),
+      h(doc, 'a', { class: 'boton', href: '/entrada/', texto: 'Volver' })));
+    raiz.querySelector('[data-foco]')?.focus({ preventScroll: false });
+    return { estado: null };
+  }
 
   const estado = {
     nivel: 1,
@@ -276,7 +306,7 @@ export function iniciarJuego(raiz, deps = {}) {
 
   function jugarRonda() {
     const tipo = estado.tiposPendientes[estado.indice % estado.tiposPendientes.length];
-    const ronda = generarRonda(estado.indice + 1, estado.nivel, tipo);
+    const ronda = generarRonda(estado.indice + 1, estado.nivel, tipo, config);
     pintarRonda(ronda, { intentos: 0, primerError: null, apoyoMostrado: false });
   }
 

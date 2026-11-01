@@ -134,6 +134,7 @@ export function iniciar(raiz, deps = {}) {
   async function entrarComo(estudiante) {
     const sesion = await api.entrar(estudiante.id);
     api.guardarToken(sesion.token);
+    api.guardarNivel(sesion.nivel);
     estado.nino = { id: sesion.estudiante.id, nombre: sesion.estudiante.nombre };
     pantallaJuegos();
   }

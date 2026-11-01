@@ -17,7 +17,8 @@
  * OA dice "empezando por cualquier numero menor que 1000") y a veces
  * Guarida cuenta hacia atras. Sube de nivel tras 2 saltos acertados a la
  * primera seguidos; baja tras 2 saltos fallados (que necesitaron mas de un
- * intento) seguidos -- nunca tras uno solo.
+ * intento) seguidos -- nunca tras uno solo. OJO: este "nivel" (1-4) es la
+ * dificultad DENTRO de la partida, no el nivel curricular -- ver niveles.json.
  *
  * Apoyo: si el nino falla 2 veces el MISMO salto, aparece el conteo
  * concreto (objetos apareciendo de a uno) antes de dejarlo intentar de
@@ -26,23 +27,23 @@
  * Voz: cada salto se lee con speechSynthesis (es-CL). Si el equipo no tiene
  * ninguna voz en español, aparece un aviso discreto (el juego sigue
  * jugable en silencio) y un boton para repetir la voz en cada salto.
+ *
+ * Que pasos usar, hasta donde llegar y como se llama/dibuja cada paso varia
+ * por nivel CURRICULAR (1-basico cuenta de 1 en 1 tambien, 3-basico suma
+ * pasos de 3/4/100...): eso vive en niveles.json, una fila por nivel, para
+ * no duplicar este archivo por cada nivel. El nivel curricular del
+ * estudiante se guarda en localStorage al entrar (ver entrada/app.js).
  */
 
 import { h } from '../../entrada/dom.js';
 import { gatoSVG } from '../../entrada/mascota.js';
-import { CLAVE_TOKEN } from '../../entrada/api.js';
+import { CLAVE_TOKEN, CLAVE_NIVEL } from '../../entrada/api.js';
 import { decir, hayVozEspanol } from '../../entrada/voz.js';
 
 const TOTAL_SALTOS = 9;
 const SALTOS_PARA_SUBIR = 2;
 const SALTOS_PARA_BAJAR = 2;
-const PASOS = ['2', '5', '10'];
-
-const CONTEXTO = {
-  2: { icono: '🧦', nombrePlural: 'calcetines', porGrupo: 2, escena: 'El tendedero de calcetines' },
-  5: { icono: '✋', nombrePlural: 'manos', porGrupo: 5, escena: 'Las manos que cuentan' },
-  10: { icono: '🪙', nombrePlural: 'monedas de $10', porGrupo: 10, escena: 'Las monedas de $10' }
-};
+const NIVEL_POR_DEFECTO = '2-basico'; // si falta el dato (sesion vieja) o el nivel no tiene fila en niveles.json todavia
 
 /** Colores de la calle, uno por techo (misma paleta que /styles.css). */
 const COLORES_TECHO = ['naranja', 'rosado', 'verde', 'morado', 'amarillo', 'azul'];
@@ -67,8 +68,8 @@ function mezclar(lista) {
 }
 
 /** Genera el punto de partida y la direccion segun el nivel. */
-function generarPunto(paso, nivel) {
-  const techo = nivel >= 4 ? 1000 : 100;
+function generarPunto(paso, nivel, config) {
+  const techo = config.techoPorDificultad[nivel - 1];
   let anterior;
   if (nivel <= 2) {
     // multiplo exacto del paso, para que el patron sea obvio.
@@ -85,13 +86,13 @@ function generarPunto(paso, nivel) {
 }
 
 /** { correcto, opciones: [{valor, tipoError|null}], ... } */
-function generarSalto(numero, nivel, tipoConteo) {
+function generarSalto(numero, nivel, tipoConteo, config) {
   const paso = Number(tipoConteo);
-  const { anterior, direccion } = generarPunto(paso, nivel);
+  const { anterior, direccion } = generarPunto(paso, nivel, config);
   const signo = direccion === 'adelante' ? 1 : -1;
   const correcto = anterior + signo * paso;
 
-  const otroPaso = Number(elegir(PASOS.filter((p) => p !== tipoConteo)));
+  const otroPaso = Number(elegir(config.pasos.filter((p) => p !== tipoConteo)));
 
   const valores = new Set([correcto]);
   function valorUnico(candidato) {
@@ -117,24 +118,52 @@ function generarSalto(numero, nivel, tipoConteo) {
   return { numero, tipoConteo, direccion, nivel, anterior, correcto, opciones };
 }
 
-function generarSecuenciaDeSaltos() {
-  // 3 de cada tipo, en orden mezclado, no 3-3-3 seguidos.
-  return mezclar([...PASOS, ...PASOS, ...PASOS]);
+function generarSecuenciaDeSaltos(pasos) {
+  // Reparte TOTAL_SALTOS entre los pasos disponibles lo mas parejo posible
+  // (con 3 pasos y 9 saltos: 3 de cada uno), despues mezcla el orden.
+  const secuencia = Array.from({ length: TOTAL_SALTOS }, (_, i) => pasos[i % pasos.length]);
+  return mezclar(secuencia);
 }
 
 /* --------------------------------- juego ---------------------------------- */
 
-export function iniciarJuego(raiz, deps = {}) {
+export async function iniciarJuego(raiz, deps = {}) {
   const doc = raiz.ownerDocument;
   const almacen = deps.almacen || window.localStorage;
   const enviar = deps.enviar || ((...args) => fetch(...args));
+  const pedirConfig = deps.pedirConfig || ((...args) => fetch(...args));
+
+  function obtenerNivelCurricular() {
+    try { return almacen.getItem(CLAVE_NIVEL) || NIVEL_POR_DEFECTO; } catch { return NIVEL_POR_DEFECTO; }
+  }
+
+  let todosLosNiveles = {};
+  try {
+    const respuesta = await pedirConfig('./niveles.json');
+    todosLosNiveles = await respuesta.json();
+  } catch {
+    // Sin internet o archivo no disponible: se sigue con el nivel por
+    // defecto mas abajo, el juego no se rompe por esto.
+  }
+  const config = todosLosNiveles[obtenerNivelCurricular()] || todosLosNiveles[NIVEL_POR_DEFECTO];
+  if (!config) {
+    // Sin internet y sin cache: no hay de donde sacar pasos/rangos. Se
+    // avisa en vez de romper el juego con una excepcion.
+    raiz.textContent = '';
+    raiz.append(h(doc, 'section', { class: 'pantalla' },
+      h(doc, 'h1', { class: 'titulo', texto: 'No pudimos cargar el juego', tabindex: '-1', 'data-foco': '' }),
+      h(doc, 'p', { class: 'texto', texto: 'Revisa tu conexión a internet e inténtalo de nuevo.' }),
+      h(doc, 'a', { class: 'boton', href: '/entrada/', texto: 'Volver' })));
+    raiz.querySelector('[data-foco]')?.focus({ preventScroll: false });
+    return { estado: null };
+  }
 
   const estado = {
     nivel: 1,
     aciertosSeguidos: 0,
     erroresSeguidos: 0,
     indice: 0,
-    tiposPendientes: generarSecuenciaDeSaltos(),
+    tiposPendientes: generarSecuenciaDeSaltos(config.pasos),
     resultados: [],
     inicioMs: Date.now(),
     ultimoSalto: null
@@ -180,7 +209,7 @@ export function iniciarJuego(raiz, deps = {}) {
     // nivel actual (que sube o baja segun el progreso) decide el rango,
     // si el punto de partida es redondo y si hay saltos hacia atras.
     const tipoConteo = estado.tiposPendientes[estado.indice];
-    const salto = generarSalto(estado.indice + 1, estado.nivel, tipoConteo);
+    const salto = generarSalto(estado.indice + 1, estado.nivel, tipoConteo, config);
     estado.ultimoSalto = salto;
     pintarSalto(salto, { intentos: 0, primerError: null, apoyoMostrado: false });
   }
@@ -192,7 +221,7 @@ export function iniciarJuego(raiz, deps = {}) {
   }
 
   function pintarSalto(salto, progreso) {
-    const ctx = CONTEXTO[Number(salto.tipoConteo)];
+    const ctx = config.contexto[salto.tipoConteo];
 
     const avisoAviso = h(doc, 'p', { class: 'error', role: 'alert', 'data-aviso': '' });
 
@@ -223,7 +252,7 @@ export function iniciarJuego(raiz, deps = {}) {
   }
 
   function mostrarApoyo(salto, progreso, despues) {
-    const ctx = CONTEXTO[Number(salto.tipoConteo)];
+    const ctx = config.contexto[salto.tipoConteo];
     const grupos = Math.round(Math.abs(salto.correcto - salto.anterior) / ctx.porGrupo);
     const filas = [];
     for (let g = 0; g < grupos; g += 1) {

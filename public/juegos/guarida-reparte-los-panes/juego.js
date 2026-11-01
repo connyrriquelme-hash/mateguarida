@@ -34,19 +34,25 @@
  *
  * Voz: igual que los techos -- speechSynthesis (es-CL), aviso discreto si
  * el aparato no tiene voz en español, y un boton para repetirla.
+ *
+ * Que tablas usar y hasta cuantas bolsas llegar en cada nivel de dificultad
+ * varia por nivel CURRICULAR (3-basico amplia a las tablas hasta el 10):
+ * eso vive en niveles.json, una fila por nivel, para no duplicar este
+ * archivo. El nivel curricular del estudiante se guarda en localStorage al
+ * entrar (ver entrada/app.js).
  */
 
 import { h } from '../../entrada/dom.js';
 import { gatoSVG } from '../../entrada/mascota.js';
 import { panSVG, TIPOS_PAN } from './pan.js';
-import { CLAVE_TOKEN } from '../../entrada/api.js';
+import { CLAVE_TOKEN, CLAVE_NIVEL } from '../../entrada/api.js';
 import { decir, hayVozEspanol } from '../../entrada/voz.js';
 
 const TOTAL_RONDAS = 9;
 const RONDAS_PARA_SUBIR = 2;
 const RONDAS_PARA_BAJAR = 2;
-const TABLAS = ['2', '5', '10'];
 const COLORES_BOLSA = ['naranja', 'rosado', 'verde', 'morado', 'amarillo', 'azul'];
+const NIVEL_POR_DEFECTO = '2-basico'; // si falta el dato (sesion vieja) o el nivel no tiene fila en niveles.json todavia
 
 /* --------------------------- generar una ronda ---------------------------- */
 
@@ -67,15 +73,11 @@ function mezclar(lista) {
   return copia;
 }
 
-function maximoBolsas(nivel) {
-  return nivel <= 1 ? 5 : 10;
-}
-
 /** { correcto, opciones: [{valor, tipoError|null}], ... } */
-function generarRonda(numero, nivel, tabla) {
+function generarRonda(numero, nivel, tabla, config) {
   const panesPorBolsa = Number(tabla);
   const tipoPan = elegir(TIPOS_PAN);
-  const otraTabla = Number(elegir(TABLAS.filter((t) => t !== tabla)));
+  const otraTabla = Number(elegir(config.tablas.filter((t) => t !== tabla)));
 
   const valores = new Set();
   function valorUnico(candidato) {
@@ -91,7 +93,7 @@ function generarRonda(numero, nivel, tabla) {
   }
 
   if (nivel <= 3) {
-    const bolsas = entero(1, maximoBolsas(nivel) + 1);
+    const bolsas = entero(1, config.maxBolsasPorDificultad[nivel - 1] + 1);
     const correcto = valorUnico(bolsas * panesPorBolsa);
     const opciones = mezclar([
       { valor: correcto, tipoError: null },
@@ -103,7 +105,7 @@ function generarRonda(numero, nivel, tabla) {
   }
 
   // Nivel 4: inverso. Dado el total y cuanto trae cada bolsa, ¿cuantas bolsas hay?
-  const bolsasReal = entero(1, maximoBolsas(4) + 1);
+  const bolsasReal = entero(1, config.maxBolsasPorDificultad[3] + 1);
   const total = bolsasReal * panesPorBolsa;
   const correcto = valorUnico(bolsasReal);
   const vecinoBolsas = bolsasReal > 1 ? bolsasReal - 1 : bolsasReal + 1;
@@ -116,25 +118,52 @@ function generarRonda(numero, nivel, tabla) {
   return { numero, modo: 'inverso', tabla, panesPorBolsa, bolsas: bolsasReal, total, tipoPan, nivel, correcto, opciones };
 }
 
-function generarSecuenciaDeTablas() {
-  // 3 de cada tabla, en orden mezclado, no 3-3-3 seguidas.
-  return mezclar([...TABLAS, ...TABLAS, ...TABLAS]);
+function generarSecuenciaDeTablas(tablas) {
+  // Reparte TOTAL_RONDAS entre las tablas disponibles lo mas parejo posible
+  // (con 3 tablas y 9 rondas: 3 de cada una), despues mezcla el orden.
+  const secuencia = Array.from({ length: TOTAL_RONDAS }, (_, i) => tablas[i % tablas.length]);
+  return mezclar(secuencia);
 }
-
 
 /* --------------------------------- juego ---------------------------------- */
 
-export function iniciarJuego(raiz, deps = {}) {
+export async function iniciarJuego(raiz, deps = {}) {
   const doc = raiz.ownerDocument;
   const almacen = deps.almacen || window.localStorage;
   const enviar = deps.enviar || ((...args) => fetch(...args));
+  const pedirConfig = deps.pedirConfig || ((...args) => fetch(...args));
+
+  function obtenerNivelCurricular() {
+    try { return almacen.getItem(CLAVE_NIVEL) || NIVEL_POR_DEFECTO; } catch { return NIVEL_POR_DEFECTO; }
+  }
+
+  let todosLosNiveles = {};
+  try {
+    const respuesta = await pedirConfig('./niveles.json');
+    todosLosNiveles = await respuesta.json();
+  } catch {
+    // Sin internet o archivo no disponible: se sigue con el nivel por
+    // defecto mas abajo, el juego no se rompe por esto.
+  }
+  const config = todosLosNiveles[obtenerNivelCurricular()] || todosLosNiveles[NIVEL_POR_DEFECTO];
+  if (!config) {
+    // Sin internet y sin cache: no hay de donde sacar tablas/rangos. Se
+    // avisa en vez de romper el juego con una excepcion.
+    raiz.textContent = '';
+    raiz.append(h(doc, 'section', { class: 'pantalla' },
+      h(doc, 'h1', { class: 'titulo', texto: 'No pudimos cargar el juego', tabindex: '-1', 'data-foco': '' }),
+      h(doc, 'p', { class: 'texto', texto: 'Revisa tu conexión a internet e inténtalo de nuevo.' }),
+      h(doc, 'a', { class: 'boton', href: '/entrada/', texto: 'Volver' })));
+    raiz.querySelector('[data-foco]')?.focus({ preventScroll: false });
+    return { estado: null };
+  }
 
   const estado = {
     nivel: 1,
     aciertosSeguidos: 0,
     erroresSeguidos: 0,
     indice: 0,
-    tablasPendientes: generarSecuenciaDeTablas(),
+    tablasPendientes: generarSecuenciaDeTablas(config.tablas),
     resultados: [],
     inicioMs: Date.now()
   };
@@ -175,7 +204,7 @@ export function iniciarJuego(raiz, deps = {}) {
 
   function jugarRonda() {
     const tabla = estado.tablasPendientes[estado.indice];
-    const ronda = generarRonda(estado.indice + 1, estado.nivel, tabla);
+    const ronda = generarRonda(estado.indice + 1, estado.nivel, tabla, config);
     pintarRonda(ronda, { intentos: 0, primerError: null, apoyoMostrado: false });
   }
 

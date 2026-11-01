@@ -85,7 +85,7 @@ export async function manejarEntrada(request, env) {
 /** POST /api/estudiantes/:id/entrar  -> { estudiante, token } */
 export async function manejarEntrarEstudiante(request, env, estudianteId) {
   const estudiante = await env.DB.prepare(
-    "SELECT e.id, e.nombre " +
+    "SELECT e.id, e.nombre, c.nivel " +
     "FROM estudiante e JOIN curso c ON c.id = e.curso_id " +
     "WHERE e.id = ?1 AND e.activo = 1 AND c.activo = 1"
   ).bind(estudianteId).first();
@@ -98,5 +98,9 @@ export async function manejarEntrarEstudiante(request, env, estudianteId) {
     "INSERT INTO sesion_estudiante (token, estudiante_id, expires_at) VALUES (?1, ?2, ?3)"
   ).bind(token, estudiante.id, expiresAt).run();
 
-  return json({ estudiante: { id: estudiante.id, nombre: estudiante.nombre }, token });
+  // El nivel curricular viaja aqui para que los juegos (publico, estatico)
+  // sepan que niveles.json usar sin tener que consultar al servidor de
+  // nuevo -- el servidor sigue siendo quien decide el OA via curriculo.mjs,
+  // esto solo evita que el cliente tenga que adivinar o pedirlo aparte.
+  return json({ estudiante: { id: estudiante.id, nombre: estudiante.nombre }, nivel: estudiante.nivel, token });
 }
