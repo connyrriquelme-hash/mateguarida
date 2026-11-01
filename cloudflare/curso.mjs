@@ -98,9 +98,37 @@ export async function manejarEntrarEstudiante(request, env, estudianteId) {
     "INSERT INTO sesion_estudiante (token, estudiante_id, expires_at) VALUES (?1, ?2, ?3)"
   ).bind(token, estudiante.id, expiresAt).run();
 
-  // El nivel curricular viaja aqui para que los juegos (publico, estatico)
-  // sepan que niveles.json usar sin tener que consultar al servidor de
-  // nuevo -- el servidor sigue siendo quien decide el OA via curriculo.mjs,
-  // esto solo evita que el cliente tenga que adivinar o pedirlo aparte.
+  // El nivel curricular viaja aqui (y se guarda en el dispositivo) solo
+  // como RESPALDO para cuando el juego cargue sin internet -- la fuente de
+  // verdad en cada partida es manejarMiSesion de mas abajo, que lo vuelve a
+  // consultar al servidor en ese momento. Asi, si en la misma tablet entra
+  // despues un nino de otro curso (otro nivel), el juego usa el nivel
+  // correcto sin depender de que el dato guardado se haya sobrescrito a
+  // tiempo.
   return json({ estudiante: { id: estudiante.id, nombre: estudiante.nombre }, nivel: estudiante.nivel, token });
+}
+
+/**
+ * POST /api/mi-sesion  { token } -> { nivel }
+ * El juego la llama al cargar, ANTES de generar la primera ronda: el nivel
+ * curricular que importa es el del curso de la sesion en este momento, no
+ * el que haya quedado guardado en el dispositivo (ese es solo respaldo si
+ * esta llamada falla por falta de internet). No devuelve nada mas del
+ * estudiante -- esto no reemplaza /api/intentos ni la validacion de sesion
+ * que ya hace ese endpoint, solo resuelve que niveles.json usar.
+ */
+export async function manejarMiSesion(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const token = String(body.token || "");
+  if (!token) return json({ error: "Falta el token de sesion." }, 401);
+
+  const fila = await env.DB.prepare(
+    "SELECT c.nivel FROM sesion_estudiante s " +
+    "JOIN estudiante e ON e.id = s.estudiante_id " +
+    "JOIN curso c ON c.id = e.curso_id " +
+    "WHERE s.token = ?1 AND s.expires_at > ?2 AND e.activo = 1 AND c.activo = 1"
+  ).bind(token, new Date().toISOString()).first();
+
+  if (!fila) return json({ error: "La sesion ya no es valida." }, 401);
+  return json({ nivel: fila.nivel });
 }

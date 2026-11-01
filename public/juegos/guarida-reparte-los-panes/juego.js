@@ -133,19 +133,45 @@ export async function iniciarJuego(raiz, deps = {}) {
   const enviar = deps.enviar || ((...args) => fetch(...args));
   const pedirConfig = deps.pedirConfig || ((...args) => fetch(...args));
 
-  function obtenerNivelCurricular() {
+  function obtenerToken() {
+    try { return almacen.getItem(CLAVE_TOKEN) || ''; } catch { return ''; }
+  }
+
+  function nivelDeRespaldo() {
     try { return almacen.getItem(CLAVE_NIVEL) || NIVEL_POR_DEFECTO; } catch { return NIVEL_POR_DEFECTO; }
   }
 
-  let todosLosNiveles = {};
-  try {
-    const respuesta = await pedirConfig('./niveles.json');
-    todosLosNiveles = await respuesta.json();
-  } catch {
-    // Sin internet o archivo no disponible: se sigue con el nivel por
-    // defecto mas abajo, el juego no se rompe por esto.
+  /**
+   * El nivel curricular lo decide el SERVIDOR, segun el curso de la sesion
+   * en este momento (no el que haya quedado guardado en el dispositivo):
+   * si en la misma tablet entro despues un nino de otro curso, este llamado
+   * ya trae el nivel correcto. Lo guardado en el dispositivo es solo
+   * respaldo para cuando esta llamada falla por falta de internet.
+   */
+  async function obtenerNivelCurricular() {
+    const token = obtenerToken();
+    if (token) {
+      try {
+        const respuesta = await enviar('/api/mi-sesion', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token })
+        });
+        if (respuesta.ok) {
+          const datos = await respuesta.json();
+          if (datos.nivel) {
+            try { almacen.setItem(CLAVE_NIVEL, datos.nivel); } catch { /* respaldo best-effort */ }
+            return datos.nivel;
+          }
+        }
+      } catch { /* sin internet: cae al respaldo de abajo */ }
+    }
+    return nivelDeRespaldo();
   }
-  const config = todosLosNiveles[obtenerNivelCurricular()] || todosLosNiveles[NIVEL_POR_DEFECTO];
+
+  const [todosLosNiveles, nivelCurricular] = await Promise.all([
+    pedirConfig('./niveles.json').then((r) => r.json()).catch(() => ({})),
+    obtenerNivelCurricular()
+  ]);
+  const config = todosLosNiveles[nivelCurricular] || todosLosNiveles[NIVEL_POR_DEFECTO];
   if (!config) {
     // Sin internet y sin cache: no hay de donde sacar tablas/rangos. Se
     // avisa en vez de romper el juego con una excepcion.
@@ -179,10 +205,6 @@ export async function iniciarJuego(raiz, deps = {}) {
     raiz.append(pantalla);
     const foco = pantalla.querySelector('[data-foco]');
     if (foco) foco.focus({ preventScroll: false });
-  }
-
-  function obtenerToken() {
-    try { return almacen.getItem(CLAVE_TOKEN) || ''; } catch { return ''; }
   }
 
   function pantallaSinSesion() {

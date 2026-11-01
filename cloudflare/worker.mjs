@@ -10,7 +10,7 @@
  * connyrriquelme@gmail.com.
  */
 
-import { manejarEntrada, manejarEntrarEstudiante } from "./curso.mjs";
+import { manejarEntrada, manejarEntrarEstudiante, manejarMiSesion } from "./curso.mjs";
 import { manejarIntento } from "./intentos.mjs";
 import { manejarVoz } from "./voz.mjs";
 import { obtenerDocente, respuestaNoAutorizado } from "./acceso.mjs";
@@ -103,6 +103,10 @@ export default {
     const matchEntrar = pathname.match(/^\/api\/estudiantes\/([^/]+)\/entrar$/);
     if (matchEntrar && request.method === "POST") {
       return manejarEntrarEstudiante(request, env, decodeURIComponent(matchEntrar[1]));
+    }
+
+    if (pathname === "/api/mi-sesion" && request.method === "POST") {
+      return manejarMiSesion(request, env);
     }
 
     if (pathname === "/api/intentos" && request.method === "POST") {
