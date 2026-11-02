@@ -58,7 +58,7 @@ export async function manejarEntrada(request, env) {
   await limpiarFallos(env, ip);
 
   const { results: estudiantes } = await env.DB.prepare(
-    "SELECT id, nombre, inicial_apellido " +
+    "SELECT id, nombre, inicial_apellido, icono " +
     "FROM estudiante WHERE curso_id = ?1 AND activo = 1 ORDER BY nombre COLLATE NOCASE"
   ).bind(curso.id).all();
 
@@ -76,7 +76,8 @@ export async function manejarEntrada(request, env) {
     estudiantes: (estudiantes || []).map((e) => ({
       id: e.id,
       nombre: e.nombre,
-      inicialApellido: e.inicial_apellido || null
+      inicialApellido: e.inicial_apellido || null,
+      icono: e.icono || null
     })),
     juegos
   });

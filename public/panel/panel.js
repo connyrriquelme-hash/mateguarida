@@ -7,6 +7,7 @@
  */
 
 import { h } from '../entrada/dom.js';
+import { ICONOS } from '../entrada/iconos.js';
 import { api, ErrorApi } from './api.js';
 
 const NIVELES = [
@@ -280,13 +281,78 @@ export function iniciar(raiz) {
       h(doc, 'h2', { texto: 'Estudiantes' }),
       h(doc, 'table', { class: 'panel-tabla' },
         h(doc, 'thead', {}, h(doc, 'tr', {},
-          h(doc, 'th', { texto: 'Nombre' }), h(doc, 'th', { texto: 'Inicial apellido' }),
+          h(doc, 'th', { texto: 'Ícono' }), h(doc, 'th', { texto: 'Nombre' }), h(doc, 'th', { texto: 'Inicial apellido' }),
           h(doc, 'th', { texto: 'Mesa' }), h(doc, 'th', { texto: 'Activo' }), h(doc, 'th', {}))),
         h(doc, 'tbody', {}, filasEstudiantes)),
 
       formularioPegarLista(curso),
 
       seccionJuegos(curso, juegos)));
+  }
+
+  /** Vista del icono actual (o un marcador vacio), tamaño chico, redonda. */
+  function vistaIcono(claveIcono) {
+    const entrada = claveIcono ? ICONOS[claveIcono] : null;
+    if (!entrada) return h(doc, 'span', { class: 'panel-icono-vacio', texto: 'sin ícono' });
+    const caja = h(doc, 'span', { class: 'panel-icono-vista' });
+    caja.innerHTML = entrada.svg;
+    return caja;
+  }
+
+  /**
+   * Dialogo con los 36 iconos del catalogo: los que ya usa otro estudiante
+   * ACTIVO de este curso quedan apagados (no se pueden elegir), salvo el que
+   * ya tiene este mismo estudiante (se marca como actual, igual elegible por
+   * si se quiere re-confirmar). Al tocar uno se guarda altiro.
+   */
+  async function abrirSelectorIcono(curso, estudiante, alGuardar) {
+    const dialogo = h(doc, 'dialog', { class: 'panel-dialog-iconos' },
+      h(doc, 'h2', { texto: `Ícono de ${estudiante.nombre}` }),
+      h(doc, 'p', { class: 'panel-ayuda', texto: 'Cargando…' }));
+    doc.body.append(dialogo);
+    dialogo.showModal();
+    dialogo.addEventListener('close', () => dialogo.remove());
+
+    let usados;
+    try {
+      const { iconos } = await api.obtenerIconosDeCurso(curso.id);
+      usados = new Set(iconos.filter((i) => i.usado).map((i) => i.clave));
+    } catch (error) {
+      dialogo.querySelector('.panel-ayuda').textContent = mensajeError(error);
+      return;
+    }
+
+    const botones = Object.entries(ICONOS).map(([clave, entrada]) => {
+      const esActual = clave === estudiante.icono;
+      const estaUsado = usados.has(clave) && !esActual;
+      const boton = h(doc, 'button', {
+        type: 'button',
+        class: `panel-icono-opcion${estaUsado ? ' panel-icono-opcion--usado' : ''}${esActual ? ' panel-icono-opcion--actual' : ''}`,
+        disabled: estaUsado || undefined,
+        'aria-label': entrada.nombre,
+        title: entrada.nombre
+      });
+      boton.innerHTML = entrada.svg;
+      boton.addEventListener('click', async () => {
+        dialogo.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+        try {
+          await api.actualizarEstudiante(estudiante.id, { icono: clave });
+          dialogo.close();
+          alGuardar(clave);
+        } catch (error) {
+          doc.defaultView.alert(mensajeError(error));
+          dialogo.close();
+        }
+      });
+      return boton;
+    });
+
+    dialogo.textContent = '';
+    dialogo.append(
+      h(doc, 'h2', { texto: `Ícono de ${estudiante.nombre}` }),
+      h(doc, 'p', { class: 'panel-ayuda', texto: 'Los apagados ya los usa otro estudiante de este curso.' }),
+      h(doc, 'div', { class: 'panel-grilla-iconos' }, botones),
+      h(doc, 'button', { class: 'panel-boton panel-boton--claro panel-boton--chico', type: 'button', texto: 'Cerrar', onclick: () => dialogo.close() }));
   }
 
   function filaEstudiante(curso, e) {
@@ -309,6 +375,18 @@ export function iniciar(raiz) {
     mesa.addEventListener('change', () => guardar({ mesa: mesa.value ? Number(mesa.value) : null }));
     activo.addEventListener('change', () => guardar({ activo: activo.checked }));
 
+    let vistaActual = vistaIcono(e.icono);
+    const cambiarIcono = h(doc, 'button', { class: 'panel-boton panel-boton--chico panel-boton--claro', type: 'button', texto: 'Cambiar' });
+    cambiarIcono.addEventListener('click', () => {
+      abrirSelectorIcono(curso, e, (claveNueva) => {
+        e.icono = claveNueva;
+        const nuevaVista = vistaIcono(claveNueva);
+        vistaActual.replaceWith(nuevaVista);
+        vistaActual = nuevaVista;
+      });
+    });
+    const celdaIcono = h(doc, 'td', { class: 'panel-icono-celda' }, vistaActual, cambiarIcono);
+
     const eliminar = h(doc, 'button', { class: 'panel-boton panel-boton--chico panel-boton--peligro', type: 'button', texto: 'Eliminar' });
     eliminar.addEventListener('click', async () => {
       if (!doc.defaultView.confirm(`¿Eliminar a ${e.nombre} del curso?`)) return;
@@ -321,7 +399,7 @@ export function iniciar(raiz) {
     });
 
     return h(doc, 'tr', {},
-      h(doc, 'td', {}, nombre), h(doc, 'td', {}, inicial), h(doc, 'td', {}, mesa),
+      celdaIcono, h(doc, 'td', {}, nombre), h(doc, 'td', {}, inicial), h(doc, 'td', {}, mesa),
       h(doc, 'td', {}, activo), h(doc, 'td', {}, eliminar));
   }
 

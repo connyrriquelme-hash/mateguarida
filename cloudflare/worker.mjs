@@ -16,7 +16,7 @@ import { manejarVoz } from "./voz.mjs";
 import { obtenerDocente, respuestaNoAutorizado } from "./acceso.mjs";
 import {
   listarCursos, crearCurso, obtenerCurso, actualizarCurso, eliminarCurso, regenerarCodigo,
-  agregarEstudiantes, actualizarEstudiante, eliminarEstudiante, obtenerAvance,
+  agregarEstudiantes, actualizarEstudiante, eliminarEstudiante, obtenerAvance, listarIconosDeCurso,
   listarJuegosDeCurso, asignarJuegos, obtenerSumoPrimero, guardarSumoPrimero
 } from "./docente.mjs";
 
@@ -58,6 +58,11 @@ async function manejarDocente(request, env, pathname) {
   const matchAvance = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/avance$/);
   if (matchAvance && method === "GET") {
     return obtenerAvance(env, decodeURIComponent(matchAvance[1]));
+  }
+
+  const matchIconos = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/iconos$/);
+  if (matchIconos && method === "GET") {
+    return listarIconosDeCurso(env, decodeURIComponent(matchIconos[1]));
   }
 
   const matchJuegosCurso = pathname.match(/^\/api\/docente\/cursos\/([^/]+)\/juegos$/);

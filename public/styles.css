@@ -30,6 +30,10 @@
   --turquesa: #0E7C7C;
   --tinte-turquesa: #D9F0EE;
 
+  /* Tonos de pelaje/plumaje para los iconos de estudiante (entrada/iconos.js). */
+  --arena: #C9A98C;
+  --pizarra: #5B5750;
+
   --papel: #FFF6EA;
   --blanco: #FFFFFF;
   --gris: #EDE4D8;
@@ -274,6 +278,22 @@ input, select, textarea {
   background: rgba(255, 255, 255, 0.25);
 }
 .nombre-texto { font-size: 1rem; word-break: break-word; }
+
+.nombre-icono {
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--blanco);
+}
+.nombre-icono svg { width: 100%; height: 100%; display: block; }
+
+/* Transicion: los niños todavia no leen -- boton y dibujo mas grandes,
+   nombre chico (se mantiene, pero es decorativo, ver entrada/app.js). */
+.nombres--transicion { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+.nombres--transicion .nombre { min-height: 150px; padding: 1rem; }
+.nombres--transicion .nombre-icono { width: 6rem; height: 6rem; }
+.nombres--transicion .nombre-texto { font-size: 0.85rem; opacity: 0.9; }
 
 .nombre[data-color="1"] { background: var(--verde); }
 .nombre[data-color="2"] { background: var(--morado); }

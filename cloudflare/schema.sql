@@ -54,6 +54,11 @@ CREATE TABLE IF NOT EXISTS estudiante (
   -- porque SQLite no puede comparar contra la columna de otra tabla en un
   -- CHECK). Selector numerico en el panel, no texto libre.
   mesa             INTEGER CHECK (mesa IS NULL OR mesa >= 1),
+  -- Clave del catalogo cerrado de iconos (cloudflare/iconos.mjs / entrada/
+  -- iconos.js): para que un nino que todavia no lee entre tocando su
+  -- dibujo, no su nombre. Se asigna sola al crear el estudiante, sin
+  -- repetirse dentro del mismo curso; editable despues desde el panel.
+  icono            TEXT,
   activo           INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
   created_at       TEXT NOT NULL,
   updated_at       TEXT NOT NULL

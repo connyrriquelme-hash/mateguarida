@@ -121,6 +121,18 @@ existen, bloquean el deploy del custom domain.
    por mesa (selector numérico), asignar juegos, ver avance por
    estudiante/mesa/OA y en qué se equivocan. Cloudflare Access configurado
    y verificado (`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD_TAG` en `wrangler.jsonc`).
+   **Ícono por estudiante** ✅ — catálogo cerrado de 36 (18 fauna chilena +
+   18 animales conocidos, sin fotos, sin marcas): `cloudflare/iconos.mjs`
+   (claves + asignación automática sin repetir dentro del curso, valida
+   `estudiante.icono`) y `public/entrada/iconos.js` (el dibujo SVG real,
+   mismas 36 claves en el mismo orden — si se agrega o quita un ícono hay
+   que actualizar los dos archivos). Se asigna solo al crear un estudiante;
+   editable desde el panel (selector visual, apaga los que ya usa otro
+   estudiante activo del mismo curso). En la entrada, el botón de cada niño
+   muestra el ícono grande y el nombre chico debajo (nunca se oculta el
+   nombre); en Transición (NT1/NT2) los botones son más grandes y la
+   instrucción "Toca tu dibujo" también se dice por voz, porque ahí el niño
+   todavía no lee.
 4. **Minijuegos** — en curso. Cada juego registra su detalle por ronda en
    la tabla genérica `ronda` (`id, intento_id, numero, variante, oa_code,
    nivel, correcto, uso_apoyo, tipo_error`): `variante` y `tipo_error` son

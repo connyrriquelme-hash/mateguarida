@@ -11,6 +11,7 @@
 
 import { generarCodigo, validarCodigo } from "./codigos.mjs";
 import { JUEGOS, existeJuego } from "./juegos.mjs";
+import { CLAVES_ICONOS, existeIcono, asignarIconoAutomatico } from "./iconos.mjs";
 
 const NIVELES_VALIDOS = ["NT1", "NT2", "1-basico", "2-basico", "3-basico", "4-basico"];
 const CANTIDAD_MESAS_MIN = 1;
@@ -62,6 +63,7 @@ function filaEstudiante(e) {
     nombre: e.nombre,
     inicialApellido: e.inicial_apellido || null,
     mesa: e.mesa === null || e.mesa === undefined ? null : Number(e.mesa),
+    icono: e.icono || null,
     activo: Boolean(e.activo)
   };
 }
@@ -177,7 +179,7 @@ export async function obtenerCurso(env, cursoId) {
   if (!curso) return json({ error: "Curso no encontrado." }, 404);
 
   const { results: estudiantes } = await env.DB.prepare(
-    "SELECT id, nombre, inicial_apellido, mesa, activo FROM estudiante WHERE curso_id = ?1 ORDER BY nombre COLLATE NOCASE"
+    "SELECT id, nombre, inicial_apellido, mesa, icono, activo FROM estudiante WHERE curso_id = ?1 ORDER BY nombre COLLATE NOCASE"
   ).bind(cursoId).all();
 
   return json({
@@ -306,14 +308,21 @@ export async function agregarEstudiantes(request, env, cursoId) {
 
   const t = ahora();
   const creados = [];
-  const sentencias = candidatos.map((c) => {
+  const iconosReservados = [];
+  const sentencias = [];
+  for (const c of candidatos) {
     const id = crypto.randomUUID();
-    creados.push({ id, nombre: c.nombre, inicialApellido: c.inicialApellido, mesa: c.mesa, activo: true });
-    return env.DB.prepare(
-      "INSERT INTO estudiante (id, curso_id, nombre, inicial_apellido, mesa, activo, created_at, updated_at) " +
-      "VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?6)"
-    ).bind(id, cursoId, c.nombre, c.inicialApellido, c.mesa, t);
-  });
+    // Sin repetir dentro del curso: ni con los que ya tenia, ni con los que
+    // se van asignando en este mismo pegado (asignarIconoAutomatico todavia
+    // no ve estos porque no se han insertado).
+    const icono = await asignarIconoAutomatico(env, cursoId, iconosReservados);
+    if (icono) iconosReservados.push(icono);
+    creados.push({ id, nombre: c.nombre, inicialApellido: c.inicialApellido, mesa: c.mesa, icono, activo: true });
+    sentencias.push(env.DB.prepare(
+      "INSERT INTO estudiante (id, curso_id, nombre, inicial_apellido, mesa, icono, activo, created_at, updated_at) " +
+      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1, ?7, ?7)"
+    ).bind(id, cursoId, c.nombre, c.inicialApellido, c.mesa, icono, t));
+  }
 
   await env.DB.batch(sentencias);
   return json({ estudiantes: creados }, 201);
@@ -343,6 +352,10 @@ export async function actualizarEstudiante(request, env, estudianteId) {
     if (r.error) return json({ error: r.error }, 400);
     campos.push("mesa = ?"); valores.push(r.valor);
   }
+  if (body.icono !== undefined) {
+    if (body.icono !== null && !existeIcono(body.icono)) return json({ error: "Icono invalido." }, 400);
+    campos.push("icono = ?"); valores.push(body.icono);
+  }
   if (body.activo !== undefined) {
     campos.push("activo = ?"); valores.push(body.activo ? 1 : 0);
   }
@@ -351,7 +364,7 @@ export async function actualizarEstudiante(request, env, estudianteId) {
   campos.push("updated_at = ?"); valores.push(ahora());
   await env.DB.prepare(`UPDATE estudiante SET ${campos.join(", ")} WHERE id = ?`).bind(...valores, estudianteId).run();
 
-  const fila = await env.DB.prepare("SELECT id, nombre, inicial_apellido, mesa, activo FROM estudiante WHERE id = ?1").bind(estudianteId).first();
+  const fila = await env.DB.prepare("SELECT id, nombre, inicial_apellido, mesa, icono, activo FROM estudiante WHERE id = ?1").bind(estudianteId).first();
   return json({ estudiante: filaEstudiante(fila) });
 }
 
@@ -368,6 +381,24 @@ export async function eliminarEstudiante(env, estudianteId) {
     env.DB.prepare("DELETE FROM estudiante WHERE id = ?1").bind(estudianteId)
   ]);
   return json({ ok: true });
+}
+
+/**
+ * GET /api/docente/cursos/:id/iconos -> las 36 claves del catalogo, cada una
+ * marcada si ya la usa un estudiante activo de ESTE curso (para apagarla en
+ * el selector del panel). El dibujo de cada clave lo sabe el cliente
+ * (entrada/iconos.js); aqui solo se dice cuales existen y cuales estan libres.
+ */
+export async function listarIconosDeCurso(env, cursoId) {
+  const curso = await env.DB.prepare("SELECT id FROM curso WHERE id = ?1").bind(cursoId).first();
+  if (!curso) return json({ error: "Curso no encontrado." }, 404);
+
+  const { results } = await env.DB.prepare(
+    "SELECT icono FROM estudiante WHERE curso_id = ?1 AND activo = 1 AND icono IS NOT NULL"
+  ).bind(cursoId).all();
+  const usados = new Set((results || []).map((r) => r.icono));
+
+  return json({ iconos: CLAVES_ICONOS.map((clave) => ({ clave, usado: usados.has(clave) })) });
 }
 
 /* --------------------------- juegos y asignacion -------------------------- */

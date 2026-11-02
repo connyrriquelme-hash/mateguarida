@@ -16,7 +16,11 @@
 
 import { crearApi, ErrorApi, normalizarCodigo } from './api.js';
 import { gatoSVG } from './mascota.js';
+import { ICONOS } from './iconos.js';
+import { decir } from './voz.js';
 import { h } from './dom.js';
+
+const NIVELES_TRANSICION = ['NT1', 'NT2'];
 
 export function iniciar(raiz, deps = {}) {
   const doc = raiz.ownerDocument;
@@ -109,15 +113,28 @@ export function iniciar(raiz, deps = {}) {
       formulario));
   }
 
+  /** El icono dibujado si el estudiante tiene uno; si no, la inicial de siempre. */
+  function iconoONombre(e, indiceColor) {
+    const entrada = e.icono ? ICONOS[e.icono] : null;
+    if (!entrada) {
+      return h(doc, 'span', { class: 'nombre-inicial', 'aria-hidden': 'true', texto: (e.nombre[0] || '?').toLocaleUpperCase('es-CL') });
+    }
+    const caja = h(doc, 'span', { class: 'nombre-icono', 'aria-hidden': 'true' });
+    caja.innerHTML = entrada.svg;
+    return caja;
+  }
+
   function pantallaNombres() {
     const { curso, estudiantes } = estado.datos;
     estado.nino = null;
+    const esTransicion = NIVELES_TRANSICION.includes(curso.nivel);
+    const instruccion = esTransicion ? 'Toca tu dibujo.' : 'Toca tu nombre.';
 
     const cuerpo = estudiantes.length
-      ? h(doc, 'ul', { class: 'nombres' }, estudiantes.map((e, i) =>
+      ? h(doc, 'ul', { class: esTransicion ? 'nombres nombres--transicion' : 'nombres' }, estudiantes.map((e, i) =>
         h(doc, 'li', {},
           h(doc, 'button', { class: 'nombre', type: 'button', 'data-color': i % 6, onclick: () => elegirNino(e) },
-            h(doc, 'span', { class: 'nombre-inicial', 'aria-hidden': 'true', texto: (e.nombre[0] || '?').toLocaleUpperCase('es-CL') }),
+            iconoONombre(e, i),
             h(doc, 'span', { class: 'nombre-texto', texto: e.inicialApellido ? `${e.nombre} ${e.inicialApellido}.` : e.nombre })))))
       : h(doc, 'p', { class: 'texto vacio', texto: 'Todavía no hay nombres en este curso. Pídele a tu profesora que los agregue.' });
 
@@ -126,9 +143,12 @@ export function iniciar(raiz, deps = {}) {
         h(doc, 'div', {},
           h(doc, 'p', { class: 'etiqueta-curso', texto: curso.nombre }),
           h(doc, 'h1', { class: 'titulo', texto: '¡Hola! ¿Quién eres?', tabindex: '-1', 'data-foco': '' }),
-          h(doc, 'p', { class: 'texto', texto: 'Toca tu nombre.' }))),
+          h(doc, 'p', { class: 'texto', texto: instruccion }))),
       h(doc, 'p', { class: 'error', role: 'alert', 'data-error': '' }),
       cuerpo));
+
+    // Transicion todavia no lee: la instruccion tambien se dice en voz alta.
+    if (esTransicion) decir(instruccion, { clave: 'toca-tu-dibujo' });
   }
 
   async function entrarComo(estudiante) {

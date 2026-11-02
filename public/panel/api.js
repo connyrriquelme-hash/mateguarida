@@ -43,6 +43,7 @@ export const api = {
   eliminarEstudiante: (id) => llamar(`/api/docente/estudiantes/${encodeURIComponent(id)}`, { metodo: 'DELETE' }),
 
   obtenerAvance: (cursoId) => llamar(`/api/docente/cursos/${encodeURIComponent(cursoId)}/avance`),
+  obtenerIconosDeCurso: (cursoId) => llamar(`/api/docente/cursos/${encodeURIComponent(cursoId)}/iconos`),
 
   listarJuegosDeCurso: (cursoId) => llamar(`/api/docente/cursos/${encodeURIComponent(cursoId)}/juegos`),
   asignarJuegos: (cursoId, juegoIds) =>

@@ -119,3 +119,37 @@
   color: var(--gris-texto);
   margin: 0;
 }
+
+/* --------------------------- icono de estudiante -------------------------- */
+
+.panel-icono-celda { display: flex; align-items: center; gap: 0.5rem; }
+.panel-icono-vista {
+  width: 40px; height: 40px; flex: 0 0 auto;
+  border-radius: 50%; overflow: hidden;
+}
+.panel-icono-vista svg { width: 100%; height: 100%; display: block; }
+.panel-icono-vacio {
+  width: 40px; height: 40px; flex: 0 0 auto;
+  border-radius: 50%; border: 2px dashed var(--gris-texto);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; color: var(--gris-texto); text-align: center;
+}
+
+dialog.panel-dialog-iconos {
+  max-width: 560px; width: calc(100% - 2rem);
+  border: var(--borde); border-radius: var(--radio); box-shadow: var(--sombra);
+  padding: 1rem;
+}
+dialog.panel-dialog-iconos::backdrop { background: rgba(43, 22, 51, 0.5); }
+.panel-dialog-iconos h2 { margin-top: 0; }
+.panel-grilla-iconos {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem;
+  max-height: 60vh; overflow-y: auto; margin: 0.75rem 0;
+}
+.panel-icono-opcion {
+  border: 2px solid var(--tinta); border-radius: 50%; padding: 0; cursor: pointer;
+  aspect-ratio: 1; background: var(--blanco); overflow: hidden;
+}
+.panel-icono-opcion svg { width: 100%; height: 100%; display: block; }
+.panel-icono-opcion--usado { opacity: 0.25; cursor: not-allowed; }
+.panel-icono-opcion--actual { border-width: 4px; border-color: var(--turquesa); }
