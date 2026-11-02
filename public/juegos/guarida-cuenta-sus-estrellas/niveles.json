@@ -1,0 +1,39 @@
+{
+  "_comentario": "Una fila por nivel curricular (NT1/NT2). 'totalRondas'/'contarRondas'/'compararRondas' definen cuantas rondas de cada tipo hay en la partida (totalRondas = contarRondas + compararRondas). Los rangos 'contarPorDificultad'/'compararPorDificultad' tienen 4 posiciones, una por cada nivel de dificultad DENTRO de la partida (1-4, el que sube/baja solo); no confundir con el nivel curricular, que es la clave de este objeto. 'puntos' indica si los botones de numero muestran el patron de puntos debajo (NT1) o solo el numeral (NT2).",
+  "NT1": {
+    "totalRondas": 6,
+    "contarRondas": 4,
+    "compararRondas": 2,
+    "puntos": true,
+    "contarPorDificultad": [
+      { "min": 1, "max": 4 },
+      { "min": 3, "max": 6 },
+      { "min": 5, "max": 8 },
+      { "min": 6, "max": 10 }
+    ],
+    "compararPorDificultad": [
+      { "min": 1, "max": 3 },
+      { "min": 2, "max": 5 },
+      { "min": 3, "max": 6 },
+      { "min": 4, "max": 8 }
+    ]
+  },
+  "NT2": {
+    "totalRondas": 9,
+    "contarRondas": 6,
+    "compararRondas": 3,
+    "puntos": false,
+    "contarPorDificultad": [
+      { "min": 3, "max": 8 },
+      { "min": 6, "max": 12 },
+      { "min": 10, "max": 16 },
+      { "min": 13, "max": 20 }
+    ],
+    "compararPorDificultad": [
+      { "min": 2, "max": 6 },
+      { "min": 4, "max": 9 },
+      { "min": 6, "max": 12 },
+      { "min": 8, "max": 15 }
+    ]
+  }
+}

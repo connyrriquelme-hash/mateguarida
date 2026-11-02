@@ -206,7 +206,7 @@ existen, bloquean el deploy del custom domain.
    `confunde_sobres_y_sueltas`.
 
    **Apoyo** en los tres: conteo concreto tras 2 fallos seguidos en la
-   misma ronda. **Voz** (`public/entrada/voz.js`, compartido por los 3
+   misma ronda. **Voz** (`public/entrada/voz.js`, compartido por los 4
    juegos — antes vivía copiado en cada uno): tres niveles, en orden de
    preferencia.
    1. Frases FIJAS (ánimo "¡Muy bien!"/"¡Casi! Inténtalo de nuevo" y los 3
@@ -228,6 +228,36 @@ existen, bloquean el deploy del custom domain.
       (sonaría robótico), siempre se dice la frase completa con una sola
       fuente de voz. `AZURE_SPEECH_KEY` es secreto del Worker
       (`wrangler secret put`), nunca vive en `wrangler.jsonc`.
+
+   **Extensión a otros niveles** (en curso, más allá de 2º básico): los
+   rangos/pasos/tablas de cada juego ya no están escritos en el código,
+   viven en un `niveles.json` propio por juego (una fila por nivel
+   curricular) — ver `cloudflare/curso.mjs` (`manejarMiSesion`, el
+   servidor decide el nivel según el curso de la sesión, el dispositivo
+   es solo respaldo). Primer juego nuevo construido con este mecanismo:
+
+   **Guarida cuenta sus estrellas** (`public/juegos/guarida-cuenta-sus-estrellas/`,
+   NT1/NT2 — Transición, sin texto en pantalla, todo por voz e imagen):
+   objetos (estrella/conchita/manzana, `objetos.js`) que el niño TOCA uno a
+   uno para contarlos (cada toque dice el número en voz; Guarida no cuenta
+   en voz alta durante la ronda, solo en el apoyo) y luego responde
+   "¿Cuántas hay?" entre 4 números (NT1 muestra puntos bajo cada numeral,
+   NT2 solo el numeral); y rondas de comparar dos grupos — "¿Dónde hay
+   más?"/"¿Dónde hay menos?", con una balanza como tercera opción cuando
+   son iguales (al azar, pero garantizado al menos una vez por partida).
+   Algunas rondas de comparar esparcen a propósito el grupo con MENOS
+   objetos, para detectar si el niño juzga por el espacio que ocupa y no
+   por la cantidad (`juzga_por_espacio`). NT1: 6 rondas (4 contar + 2
+   comparar); NT2: 9 (6 + 3). Distractores de contar: `cuenta_de_mas`,
+   `cuenta_de_menos`, `invierte_cifras` (N de dos cifras) o
+   `numero_al_azar`, y los de proceso `se_salto_alguno`/`toco_de_mas`
+   (tienen prioridad si ocurrieron: explican mejor el fallo que cuál
+   número se eligió). OA: `contar` → NT-PM-OA-06, `comparar` →
+   NT-PM-OA-04; NT-PM-OA-07 queda parcial, sin ronda propia (ver `porQue`
+   en `data/juegos-oa.json`). Pendientes del plan de extensión, sin
+   empezar: 1º básico (álbum 0-20 + techos con paso 1), 3º básico (panes
+   con tablas 1-10 + modo repartición), 4º básico (álbum 0-1000).
+
    **Sumo Primero**: campo editable desde el panel por juego y nivel
    (`juego_sumo_primero`, tomo/capítulo/título/páginas), vacío hasta que
    Conny lo complete ahí mismo — no bloquea ningún juego.

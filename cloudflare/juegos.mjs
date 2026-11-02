@@ -32,6 +32,14 @@ export const JUEGOS = {
     descripcion: "Suma y resta hasta 100 con sobres de 10 láminas y láminas sueltas, para completar el álbum.",
     duracionMinutos: "2-4",
     ruta: "/juegos/guarida-completa-su-album/"
+  },
+  "guarida-cuenta-sus-estrellas": {
+    id: "guarida-cuenta-sus-estrellas",
+    nombre: "Guarida cuenta sus estrellas",
+    nivelPrincipal: "NT1",
+    descripcion: "Toca y cuenta estrellas, conchitas y manzanas, y compara qué grupo tiene más, menos o igual.",
+    duracionMinutos: "2-4",
+    ruta: "/juegos/guarida-cuenta-sus-estrellas/"
   }
 };
 

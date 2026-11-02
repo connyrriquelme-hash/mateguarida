@@ -27,6 +27,24 @@
         "alcance": "parcial",
         "porQue": "'arma_numero' (nivel 4) cuenta para OA7 completo (unidades y decenas 0-100). 'juntar', 'regalar', 'dos_pasos' e 'intercambio' cuentan para OA9, parcial: no cubre 'creando problemas matematicos y resolviendolos' (el nino resuelve, no inventa el problema). MA02-OA-06 (estrategias de calculo mental) se sacó de esta lista: la pista de 'completar la decena' solo aparece en el apoyo, y ninguna ronda pide ni verifica que el nino use una estrategia especifica, asi que no hay una ronda que pueda atribuirsele con el mismo criterio que las demas."
       }
+    },
+    "guarida-cuenta-sus-estrellas": {
+      "NT1": {
+        "oaPorDefecto": "NT-PM-OA-06",
+        "oaPorVariante": {
+          "comparar": "NT-PM-OA-04"
+        },
+        "alcance": "parcial",
+        "porQue": "'contar' (tocar y contar objetos uno a uno, decir cuantos hay) cuenta para OA6. 'comparar' (donde hay mas/menos, con la balanza cuando son iguales) cuenta para OA4. NT-PM-OA-07 (representar cantidades hasta el 10 en forma concreta/pictorica/simbolica) queda parcial sin OA propio: la mecanica lo trabaja de forma transversal (objeto concreto + numeral simbolico), pero ninguna ronda lo pide como objetivo separado de 'contar'."
+      },
+      "NT2": {
+        "oaPorDefecto": "NT-PM-OA-06",
+        "oaPorVariante": {
+          "comparar": "NT-PM-OA-04"
+        },
+        "alcance": "parcial",
+        "porQue": "Mismo criterio que NT1, con rangos mas altos (hasta 20) via niveles.json -- NT-PM-OA-07 no aplica aqui (esta pide hasta el 10, NT2 llega a mas)."
+      }
     }
   }
 }
