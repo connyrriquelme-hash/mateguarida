@@ -110,9 +110,11 @@
   align-items: center;
 }
 .grupo-apoyo {
-  font-size: 1.75rem;
-  letter-spacing: 0.15em;
+  display: flex;
+  gap: 0.2rem;
 }
+.icono-apoyo { width: 30px; height: 30px; flex: 0 0 auto; }
+.icono-apoyo svg { width: 100%; height: 100%; display: block; }
 
 .pantalla-juego--cierre {
   gap: 1.25rem;

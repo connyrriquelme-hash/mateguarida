@@ -254,9 +254,29 @@ existen, bloquean el deploy del custom domain.
    (tienen prioridad si ocurrieron: explican mejor el fallo que cuál
    número se eligió). OA: `contar` → NT-PM-OA-06, `comparar` →
    NT-PM-OA-04; NT-PM-OA-07 queda parcial, sin ronda propia (ver `porQue`
-   en `data/juegos-oa.json`). Pendientes del plan de extensión, sin
-   empezar: 1º básico (álbum 0-20 + techos con paso 1), 3º básico (panes
-   con tablas 1-10 + modo repartición), 4º básico (álbum 0-1000).
+   en `data/juegos-oa.json`).
+
+   **1º básico** ✅ — mismos dos juegos de 2º básico, nueva fila en sus
+   `niveles.json`. **Techos**: suma el paso "1" (`pasos` pasa a
+   `["1","2","5","10"]`), icono nuevo "bolitas"; `techoPorDificultad`
+   `[20, 50, 100, 100]` (sube gradual, no salta directo a 100 como en
+   2º básico) — MA01-OA-01, completo (el OA solo pide hasta 100 y los 4
+   pasos, los 4 estan). Los iconos del apoyo (antes emoji: 🔴🧦✋🪙) pasan
+   a SVG propio (`contexto.js`, `iconoPasoSVG`), para 1º y 2º básico por
+   igual. **Álbum**: `techo` 20, rangos de dificultad siguiendo la propia
+   gradación del OA9 ("de 0 a 5, de 6 a 10, de 11 a 20"); `arma_numero`
+   exige total 10-20 (si no, nunca hay sobre que armar) y pasa a
+   **MA01-OA-08** (no MA01-OA-07, que es de estrategias de calculo
+   mental — mismo criterio de no declarar el que no tiene ronda propia).
+   `juntar`/`regalar`/`dos_pasos`/`intercambio` → MA01-OA-09, parcial
+   (no cubre "creando problemas"). Verificado con 2,7 millones de rondas
+   generadas: ningun resultado correcto negativo ni mayor a 20, en
+   ninguna dificultad ni variante.
+
+   Pendientes del plan de extensión, sin empezar: 3º básico (panes con
+   tablas 1-10 + modo repartición, techos con pasos de 100 y desde
+   cualquier numero), 4º básico (álbum 0-1000 con una tercera
+   agrupación de cajas de 100).
 
    **Sumo Primero**: campo editable desde el panel por juego y nivel
    (`juego_sumo_primero`, tomo/capítulo/título/páginas), vacío hasta que

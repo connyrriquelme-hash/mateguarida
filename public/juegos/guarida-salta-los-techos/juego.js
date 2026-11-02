@@ -37,6 +37,7 @@
 
 import { h } from '../../entrada/dom.js';
 import { gatoSVG } from '../../entrada/mascota.js';
+import { iconoPasoSVG } from './contexto.js';
 import { CLAVE_TOKEN, CLAVE_NIVEL } from '../../entrada/api.js';
 import { decir, hayVozEspanol } from '../../entrada/voz.js';
 
@@ -278,7 +279,12 @@ export async function iniciarJuego(raiz, deps = {}) {
     const grupos = Math.round(Math.abs(salto.correcto - salto.anterior) / ctx.porGrupo);
     const filas = [];
     for (let g = 0; g < grupos; g += 1) {
-      filas.push(h(doc, 'div', { class: 'grupo-apoyo' }, ctx.icono.repeat(ctx.porGrupo)));
+      const iconos = Array.from({ length: ctx.porGrupo }, () => {
+        const caja = h(doc, 'span', { class: 'icono-apoyo' });
+        caja.innerHTML = iconoPasoSVG(salto.tipoConteo);
+        return caja;
+      });
+      filas.push(h(doc, 'div', { class: 'grupo-apoyo' }, iconos));
     }
 
     const texto = `${salto.anterior} ${salto.direccion === 'adelante' ? 'más' : 'menos'} ${salto.tipoConteo} es ${salto.correcto}`;

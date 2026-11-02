@@ -1,5 +1,16 @@
 {
   "_comentario": "Una fila por nivel curricular (curso.nivel). 'rangoPorDificultad' tiene 4 posiciones (una por dificultad 1-4 DENTRO de la partida; la de indice 3 no se usa, nivel 4 generar otras variantes); cada una genera a = entero(aMin, aMaxExclusivo) * aMultiplo (igual para b). 'techo' es el tope de la suma/resta (100 en 2-basico). 'armaNumero'/'dosPasos'/'intercambio' son los rangos propios de las variantes de nivel 4.",
+  "1-basico": {
+    "techo": 20,
+    "rangoPorDificultad": [
+      { "aMin": 1, "aMaxExclusivo": 6, "aMultiplo": 1, "bMin": 1, "bMaxExclusivo": 6, "bMultiplo": 1 },
+      { "aMin": 4, "aMaxExclusivo": 9, "aMultiplo": 1, "bMin": 2, "bMaxExclusivo": 7, "bMultiplo": 1 },
+      { "aMin": 6, "aMaxExclusivo": 15, "aMultiplo": 1, "bMin": 1, "bMaxExclusivo": 9, "bMultiplo": 1 }
+    ],
+    "armaNumero": { "totalMin": 10, "totalMaxExclusivo": 21, "tamanoSobre": 10 },
+    "dosPasos": { "aMin": 3, "aMaxExclusivo": 10, "bMin": 2, "bMaxExclusivo": 7, "cMaxTope": 8 },
+    "intercambio": { "repetidasMin": 3, "repetidasMaxExclusivo": 11 }
+  },
   "2-basico": {
     "techo": 100,
     "rangoPorDificultad": [

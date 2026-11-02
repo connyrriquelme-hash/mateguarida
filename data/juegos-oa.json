@@ -5,6 +5,11 @@
   "description": "Que OA trabaja cada RONDA de cada juego (no el juego completo): 'oaPorDefecto' se usa salvo que el primer tramo de la variante (antes del primer '-') coincida con una clave de 'oaPorVariante'. 'alcance'/'porQue' describen el juego en conjunto, para mostrar en el panel. 'alcance': 'parcial' = el OA incluye lo que el juego hace pero pide mas de lo que el juego mide; 'porQue' explica que falta.",
   "juegos": {
     "guarida-salta-los-techos": {
+      "1-basico": {
+        "oaPorDefecto": "MA01-OA-01",
+        "alcance": "completo",
+        "porQue": "El OA pide contar de 1 en 1, de 2 en 2, de 5 en 5 y de 10 en 10, hacia adelante y hacia atras, empezando por cualquier numero menor que 100. Los 4 pasos estan en niveles.json ('pasos'); el punto de partida arbitrario y el conteo hacia atras aparecen en las dificultades 3-4, dentro del mismo tope de 100 en las 4 dificultades."
+      },
       "2-basico": {
         "oaPorDefecto": "MA02-OA-01",
         "alcance": "parcial",
@@ -19,6 +24,14 @@
       }
     },
     "guarida-completa-su-album": {
+      "1-basico": {
+        "oaPorDefecto": "MA01-OA-09",
+        "oaPorVariante": {
+          "arma_numero": "MA01-OA-08"
+        },
+        "alcance": "parcial",
+        "porQue": "'arma_numero' (nivel 4) cuenta para OA8 completo (unidades y decenas 0-20, agrupando de a 10). 'juntar', 'regalar', 'dos_pasos' e 'intercambio' cuentan para OA9, parcial: no cubre 'creando problemas matematicos y resolviendolos' (el nino resuelve, no inventa el problema) -- mismo limite que en 2 basico. MA01-OA-07 (estrategias de calculo mental: conteo adelante/atras, completar 10, dobles) no se declara: mismo criterio que MA02-OA-06 en 2 basico, la pista del apoyo no es una ronda verificable como estrategia especifica."
+      },
       "2-basico": {
         "oaPorDefecto": "MA02-OA-09",
         "oaPorVariante": {

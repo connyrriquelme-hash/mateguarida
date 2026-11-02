@@ -1,12 +1,22 @@
 {
-  "_comentario": "Una fila por nivel curricular (curso.nivel). 'techoPorDificultad' tiene 4 valores, uno por cada nivel de dificultad DENTRO de la partida (1-4, el que sube/baja solo); no confundir con el nivel curricular, que es la clave de este objeto. 'contexto' describe cada paso (icono, plural, cuantos forman un grupo, nombre de la escena) para pintar los saltos y leerlos en voz alta.",
+  "_comentario": "Una fila por nivel curricular (curso.nivel). 'techoPorDificultad' tiene 4 valores, uno por cada nivel de dificultad DENTRO de la partida (1-4, el que sube/baja solo); no confundir con el nivel curricular, que es la clave de este objeto. 'contexto' describe cada paso (plural, cuantos forman un grupo, nombre de la escena) para pintar los saltos y leerlos en voz alta -- el dibujo de cada paso vive en contexto.js (iconoPasoSVG), no aqui.",
+  "1-basico": {
+    "pasos": ["1", "2", "5", "10"],
+    "techoPorDificultad": [20, 50, 100, 100],
+    "contexto": {
+      "1": { "nombrePlural": "bolitas", "porGrupo": 1, "escena": "Las bolitas que se guardan" },
+      "2": { "nombrePlural": "calcetines", "porGrupo": 2, "escena": "El tendedero de calcetines" },
+      "5": { "nombrePlural": "manos", "porGrupo": 5, "escena": "Las manos que cuentan" },
+      "10": { "nombrePlural": "monedas de $10", "porGrupo": 10, "escena": "Las monedas de $10" }
+    }
+  },
   "2-basico": {
     "pasos": ["2", "5", "10"],
     "techoPorDificultad": [100, 100, 100, 1000],
     "contexto": {
-      "2": { "icono": "🧦", "nombrePlural": "calcetines", "porGrupo": 2, "escena": "El tendedero de calcetines" },
-      "5": { "icono": "✋", "nombrePlural": "manos", "porGrupo": 5, "escena": "Las manos que cuentan" },
-      "10": { "icono": "🪙", "nombrePlural": "monedas de $10", "porGrupo": 10, "escena": "Las monedas de $10" }
+      "2": { "nombrePlural": "calcetines", "porGrupo": 2, "escena": "El tendedero de calcetines" },
+      "5": { "nombrePlural": "manos", "porGrupo": 5, "escena": "Las manos que cuentan" },
+      "10": { "nombrePlural": "monedas de $10", "porGrupo": 10, "escena": "Las monedas de $10" }
     }
   }
 }
